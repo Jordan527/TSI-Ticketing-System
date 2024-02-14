@@ -214,22 +214,22 @@ Click the ellipsis button on the left bar and search for `Developer Portal` and 
 ### IAM User
 1. Open the AWS Management Console and navigate to `IAM`.
 2. Select `Users` on the left panel then click `Create user`.
-3. Enter a name like `Ticket queuer` and click `Next`.
+3. Enter a name like `Ticket Bot` and click `Next`.
 4. Under permissions keep the `Add user to group` option selected.
 5. Under `User groups` create a new user group.
-   1. Add a name for the user group like `TicketQueuer`.
+   1. Add a name for the user group like `Ticket Admin`.
    2. Search and select the permission policy called `AmazonSQSFullAccess`.
    3. Select `Create user group` to create the group.
 6. Select your newly created user group and click `Next`.
 7. Click `Create user` to create the IAM user.
 8. Under the `Security credentials` tab and `Access keys` section, click `Create access key`.
-   1. Select `Local code`, tick the confirmation box and click `Next`.
+   1. Select `Command Line Interface (CLI)`, tick the confirmation box and click `Next`.
    2. Click `Create access key`.
    3. Save both the public and private access keys somewhere safe, not in plain text.
 
 ### AWS Configure
 1. Download AWS CLI from [https://aws.amazon.com/cli/](https://aws.amazon.com/cli/).
-2. Run the command `aws configure` in a terminal and complete the steps (choose a region that is close to you for minimum latency).
+2. Run the command `aws configure` in a terminal and complete the steps (choose a region for minimal latency and/or cost).
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -237,34 +237,33 @@ Click the ellipsis button on the left bar and search for `Developer Portal` and 
 ## Deployment
 - Run the ngrok domain using the command `ngrok http --domain=your-domain-name.ngrok-free.app 5000` (make sure it is running on port **5000**) in a terminal.
 - In a separate terminal, run the Python flask app using the command `flask run` in the **same folder** that your flask app is located.
-
-## Usage
-1. In the first Power Automate workflow click `Run` at the top to generate the card in the chosen channel
+- In the first Power Automate workflow click `Run` at the top to generate the card in the chosen channel
 <br></br>
 ![Run Workflow](./Images/startWorkflow.png)
 
-2. Fill out the form in the MS Teams Channel
+## Usage
+1. Fill out the form in the MS Teams Channel
 <br></br>
 ![Adaptive Card ](./Images/adaptiveCard.png)
 
-3. Submit the form
-4. Check the sqs are of your aws console for if a message has come through
+2. Submit the form
+3. Check the sqs are of your aws console for if a message has come through
 <br></br>
 ![AWS Queue List ](./Images/awsQueueList.png)
 
-5. Click on a queue
-6. Click `Send and Receive Messages` on the top
+4. Click on a queue
+5. Click `Send and Receive Messages` on the top
 <br></br>
 ![Send and Receive Messages ](./Images/sendAndReceive.png)
 
-7.Click `Poll for Messages` in `Receiving Messages`
+6.Click `Poll for Messages` in `Receiving Messages`
 <br></br>
 ![Poll Messages ](./Images/pollMessages.png)
 
-8. You should see a list of messages
+7. You should see a list of messages
 <br></br>
 ![SQS Messages ](./Images/sqsMessages.png)
-9. Click on a message to see its contents
+8. Click on a message to see its contents
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
