@@ -1,0 +1,79 @@
+{
+    "type": "AdaptiveCard",
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "version": "1.4",
+    "body": [
+        {
+            "type": "Container",
+            "items": [
+                {
+                    "type": "TextBlock",
+                    "text": "Issue Report Ticket",
+                    "wrap": true,
+                    "horizontalAlignment": "Center",
+                    "size": "Large"
+                }
+            ]
+        },
+        {
+            "type": "Container",
+            "items": [
+                {
+                    "type": "Input.Text",
+                    "id": "title",
+                    "label": "Title",
+                    "isRequired": true,
+                    "errorMessage": "Title is required",
+                    "regex": "^(?!\\s*$).+"
+                },
+                {
+                    "type": "Input.ChoiceSet",
+                    "choices": [
+                        {
+                            "title": "High",
+                            "value": "1"
+                        },
+                        {
+                            "title": "Medium",
+                            "value": "2"
+                        },
+                        {
+                            "title": "Low",
+                            "value": "3"
+                        }
+                    ],
+                    "placeholder": "Please Select",
+                    "id": "priority",
+                    "label": "Priority",
+                    "isRequired": true,
+                    "errorMessage": "Priotity is required"
+                },
+                {
+                    "type": "Input.Text",
+                    "id": "description",
+                    "label": "Description",
+                    "isRequired": true,
+                    "errorMessage": "Description is required",
+                    "isMultiline": true,
+                    "maxLength": 300,
+                    "regex": "^(?!\\s*$).+"
+                }
+            ],
+            "horizontalAlignment": "Left"
+        },
+        {
+            "type": "Container",
+            "items": [
+                {
+                    "type": "ActionSet",
+                    "actions": [
+                        {
+                            "type": "Action.Submit",
+                            "title": "Submit"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
