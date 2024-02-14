@@ -1,49 +1,49 @@
-from flask import Flask, request
+from flask import Flask, request, Response
 import json
+import boto3
 
 app = Flask(__name__)
 
 @app.route("/", methods=["POST"])
 def hook():
-    data = json.loads(request.data)
-    html = data["text"]
-    html = html.replace("</p>", "")
-    html = html.replace("<p>", "")
-    lines = html.split("\r\n")
-    lines.pop(0)
-    dictionary = {}
-    
-    for line in lines:
-        line = line.split(":")
-        dictionary[line[0].strip().lower()] = line[1].strip()
-    
-    if not ("title" in dictionary and "priority" in dictionary and "description" in dictionary):
-        return {
-            "type": "message",
-            "text": "<p>Please submit your ticket in the following format:</p> <p>Title: </p> <p>Priority: </p> <p>Description: </p>"
-        }
+    try:
+        data = json.loads(request.data)
+        if "title" not in data:
+            return Response(status=400)
         
-    match dictionary["priority"].lower():
-        case "low":
-            return {
-                "type": "message",
-                "text": "Low priority ticket submitted!"
-            }
-        case "medium":
-            return {
-                "type": "message",
-                "text": "Medium priority ticket submitted!"
-            }
-        case "high":
-            return {
-                "type": "message",
-                "text": "High priority ticket submitted!"
-            }
-        case _:
-            return {
-                "type": "message",
-                "text": "Invalid priority level! Please submit a ticket with a priority level of low, medium or high."
-            }
+        title = data["title"].strip()
+        priority = int(data["priority"])
+        description = data["description"].strip()
+        
+        match priority:
+            case 1:
+                sendToQueue({"title": title, "description": description}, "high-priority-queue")
+            case 2:
+                sendToQueue({"title": title, "description": description}, "medium-priority-queue")
+            case 3:
+                sendToQueue({"title": title, "description": description}, "low-priority-queue")
+        
+        return Response("Your ticket has been sent", status=200)
+    except Exception as e:
+        return Response("There was an error processing your request", status=200)
+
+
+def sendToQueue(payload, priority):
+    json_payload = json.dumps(payload)
+    
+    sqs = boto3.client("sqs")
+    try:
+        url = sqs.get_queue_by_name(QueueName=priority)["QueueUrl"]
+    except:
+        url = sqs.create_queue(QueueName=priority)["QueueUrl"]
+        
+    response = sqs.send_message( 
+        QueueUrl=url, 
+        DelaySeconds=10, 
+        MessageBody=( 
+            json_payload 
+        ) 
+    ) 
 
 if __name__ == "__main__":
     app.run()
