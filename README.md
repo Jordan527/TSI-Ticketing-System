@@ -297,7 +297,7 @@ Distributed under the MIT License. See `LICENSE.md` for more information.
 [issues-shield]: https://img.shields.io/github/issues/Jordan527/TSI-Ticketing-System.svg?style=for-the-badge
 [issues-url]: https://github.com/Jordan527/TSI-Ticketing-System/issues
 [license-shield]: https://img.shields.io/github/license/Jordan527/TSI-Ticketing-System.svg?style=for-the-badge
-[license-url]: https://github.com/Jordan527/TSI-Ticketing-System/blob/master/LICENSE.txt
+[license-url]: https://github.com/Jordan527/TSI-Ticketing-System/blob/master/LICENSE.md
 
 [product-screenshot]: images/screenshot.png
 
