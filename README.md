@@ -60,10 +60,10 @@
       <a href="#setup">Setup</a>
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#step-1-create-a-new-team-in-ms-teams">Step 1. Create a new team in MS Teams</a></li>
-        <li><a href="#step-2-add-required-apps-to-ms-teams">Step 2. Add required Apps to MS Teams</a></li>
-        <li><a href="#step-3-create-an-ngrok-account">Step 3. Create an Ngrok account</a></li>
-        <li><a href="#step-4-build-a-power-automate-solution">Step 4. Build a Power Automate Solution</a></li>
+        <li><a href="#create-a-new-team-in-ms-teams">Create a new team in MS Teams</a></li>
+        <li><a href="#add-required-apps-to-ms-teams">Add required Apps to MS Teams</a></li>
+        <li><a href="#create-an-ngrok-account">Create an Ngrok account</a></li>
+        <li><a href="#build-a-power-automate-solution">Build a Power Automate Solution</a></li>
       </ul>
     </li>
     <li>
@@ -128,7 +128,7 @@ Alternatively, use the following command:
 pip install -r requirements.txt
 ```
 
-### Step 1. Create a new team in MS Teams
+### Create a new team in MS Teams
 1. Click the `+` button on the Teams tab of MS Teams and select `Create team`.
 2. Select `From scratch` > `Public`, then give your new team a name and description, and click `Create`.
 3. Create a new channel in the team by clicking the ellipsis button next to the team name, then `Add channel`.
@@ -137,13 +137,13 @@ pip install -r requirements.txt
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-### Step 2. Add required Apps to MS Teams
+### Add required Apps to MS Teams
 Click the ellipsis button on the left bar and search for `Developer Portal` and add this to teams (right-click to pin the app to the left bar).
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-### Step 3. Create an Ngrok account.
+### Create an Ngrok account.
 1. Go to [https://ngrok.com/](https://ngrok.com/) and sign up
 2. Follow the installation steps.
 3. In the `Deploy your app online` section, select the second tab `Static Domain`.
@@ -151,11 +151,12 @@ Click the ellipsis button on the left bar and search for `Developer Portal` and 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-### Step 4. Build a Power Automate Solution.
+### Build a Power Automate Solution.
 
 1.  Navigate to [Power Automate Solutions](https://make.powerautomate.com).
-2.  Click `+ New solution` at the top left of the screen, fill in the fields and click `Create`.
-3.  Create the first workflow.
+2.  Click `Solutions`
+3.  Click `+ New solution` at the top left of the screen, fill in the fields and click `Create`.
+4.  Create the first workflow.
     1. In the solution click `+ New` > `Automation` > `Cloud flow` > `Instant`.
     2. Search for and select `Manually trigger a flow` as your trigger from Power Automate.
        1. Leave the inputs blank.
@@ -168,7 +169,7 @@ Click the ellipsis button on the left bar and search for `Developer Portal` and 
        6. Click `Show all` advanced parameters.
        7. Give an ID to your card and put in into the `Card Type ID` field.
     4. Save this workflow.
-4.  Create the second workflow.
+5.  Create the second workflow.
     1. In the solution click `+ New` > `Automation` > `Cloud flow` > `Automated`.
     2. Search for and select `When someone responds to an adaptive card` as your trigger from MS Teams.
        1. Paste the json from `TSI Ticket.json` into the `Inputs Adaptive Card` field.
@@ -227,10 +228,43 @@ Click the ellipsis button on the left bar and search for `Developer Portal` and 
    3. Save both the public and private access keys somewhere safe, not in plain text.
 
 ### AWS Configure
-
 1. Download AWS CLI from [https://aws.amazon.com/cli/](https://aws.amazon.com/cli/).
 2. Run the command `aws configure` in a terminal and complete the steps (choose a region that is close to you for minimum latency).
 
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Deployment
+- Run the ngrok domain using the command `ngrok http --domain=your-domain-name.ngrok-free.app 5000` (make sure it is running on port **5000**) in a terminal.
+- In a separate terminal, run the Python flask app using the command `flask run` in the **same folder** that your flask app is located.
+
+## Usage
+1. In the first Power Automate workflow click `Run` at the top to generate the card in the chosen channel
+<br></br>
+![Run Workflow](./Images/startWorkflow.png)
+
+2. Fill out the form in the MS Teams Channel
+<br></br>
+![Adaptive Card ](./Images/adaptiveCard.png)
+
+3. Submit the form
+4. Check the sqs are of your aws console for if a message has come through
+<br></br>
+![AWS Queue List ](./Images/awsQueueList.png)
+
+5. Click on a queue
+6. Click `Send and Receive Messages` on the top
+<br></br>
+![Send and Receive Messages ](./Images/sendAndReceive.png)
+
+7.Click `Poll for Messages` in `Receiving Messages`
+<br></br>
+![Poll Messages ](./Images/pollMessages.png)
+
+8. You should see a list of messages
+<br></br>
+![SQS Messages ](./Images/sqsMessages.png)
+9. Click on a message to see its contents
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
