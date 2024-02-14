@@ -29,20 +29,18 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/othneildrew/Best-README-Template">
+  <a href="https://github.com/Jordan527/TSI-Ticketing-System">
     <img src="images/logo.png" alt="Logo" width="80" height="80">
   </a>
 
-  <h3 align="center">Best-README-Template</h3>
+<h3 align="center">TSI Ticketing System</h3>
 
   <p align="center">
-    TSI Ticketing System
+    A serverless AWS ticketing system for Microsoft Teams 
     <br />
     <a href="https://github.com/Jordan527/TSI-Ticketing-System"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/Jordan527/TSI-Ticketing-System">View Demo</a>
-    ·
     <a href="https://github.com/Jordan527/TSI-Ticketing-System/issues">Report Bug</a>
     ·
     <a href="https://github.com/Jordan527/TSI-Ticketing-System/issues">Request Feature</a>
@@ -58,6 +56,7 @@
     <li>
       <a href="#about-the-project">About The Project</a>
       <ul>
+        <li><a href="#key-features">Key Features</a></li>
         <li><a href="#built-with">Built With</a></li>
       </ul>
     </li>
@@ -72,7 +71,6 @@
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
     <li><a href="#acknowledgments">Acknowledgments</a></li>
   </ol>
 </details>
@@ -84,24 +82,20 @@
 
 [![Product Name Screen Shot][product-screenshot]](https://example.com)
 
-There are many great README templates available on GitHub; however, I didn't find one that really suited my needs so I created this enhanced one. I want to create a README template so amazing that it'll be the last one you ever need -- I think this is it.
+The TSI Ticketing System is a comprehensive bug ticketing system designed to streamline the process of reporting, tracking, and resolving software issues. Leveraging Python Flask for the backend, Microsoft Teams for collaboration, Power Automate for workflow automation, and AWS for scalable infrastructure, offering a seamless experience for development teams to manage bugs efficiently.
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-Here's why:
-* Your time should be focused on creating something amazing. A project that solves a problem and helps others
-* You shouldn't be doing the same tasks over and over like creating a README from scratch
-* You should implement DRY principles to the rest of your life :smile:
-
-Of course, no one template will serve all projects since your needs may be different. So I'll be adding more in the near future. You may also suggest changes by forking this repo and creating a pull request or opening an issue. Thanks to all the people have contributed to expanding this template!
-
-Use the `BLANK_README.md` to get started.
+### Key Features
+* Bug Reporting: Users can easily report bugs by filling out a structured form within the application, providing essential details such as bug description, severity, screenshots, and steps to reproduce.
+* Ticket Tracking: Facilitates real-time tracking of bug tickets, allowing developers and managers to monitor the status of reported issues, assign tasks, and set priorities.
+* Integration with Microsoft Teams: Seamless integration with Microsoft Teams enables automatic notifications and updates on bug ticket status changes, ensuring effective communication among team members.
+* Power Automate Workflows: Automates repetitive tasks and workflows using Power Automate, streamlining processes such as bug assignment, notification delivery, and status updates.
+* AWS Cloud Infrastructure: Hosted on AWS, offering scalability, reliability, and security, ensuring high availability and performance for handling bug tracking operations.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
-
 ### Built With
-
-This section should list any major frameworks/libraries used to bootstrap your project. Leave any add-ons/plugins for the acknowledgements section. Here are a few examples.
 
 * [![Flask][Flask.com]][Flask-url]
 
@@ -125,12 +119,10 @@ This is an example of how to list things you need to use the software and how to
 
 ### Installation
 
-_Below is an example of how you can instruct your audience on installing and setting up your app. This template doesn't rely on any external dependencies or services._
-
 1. Get a free API Key at [https://example.com](https://example.com)
 2. Clone the repo
    ```sh
-   git clone https://github.com/your_username_/Project-Name.git
+   git clone https://github.com/Jordan527/TSI-Ticketing-System.git
    ```
 3. Install NPM packages
    ```sh
@@ -159,15 +151,14 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 <!-- ROADMAP -->
 ## Roadmap
 
-- [x] Add Changelog
-- [x] Add back to top links
-- [ ] Add Additional Templates w/ Examples
-- [ ] Add "components" document to easily copy & paste sections of the readme
-- [ ] Multi-language Support
-    - [ ] Chinese
-    - [ ] Spanish
+- [x] Use an SQS queue
+- [ ] Add Lambda functions 
+- [ ] Send tickets to their relevant destinations
+    - [ ] High priority to a slack channel
+    - [ ] Medium priority to a trello board
+    - [ ] Low priority to a s3 bucket
 
-See the [open issues](https://github.com/othneildrew/Best-README-Template/issues) for a full list of proposed features (and known issues).
+See the [open issues](https://github.com/Jordan527/TSI-Ticketing-System/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -194,18 +185,7 @@ Don't forget to give the project a star! Thanks again!
 <!-- LICENSE -->
 ## License
 
-Distributed under the MIT License. See `LICENSE.txt` for more information.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- CONTACT -->
-## Contact
-
-Your Name - [@your_twitter](https://twitter.com/your_username) - email@example.com
-
-Project Link: [https://github.com/your_username/repo_name](https://github.com/your_username/repo_name)
+Distributed under the MIT License. See `LICENSE.md` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -214,16 +194,7 @@ Project Link: [https://github.com/your_username/repo_name](https://github.com/yo
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-Use this space to list resources you find helpful and would like to give credit to. I've included a few of my favorites to kick things off!
-
-* [Choose an Open Source License](https://choosealicense.com)
-* [GitHub Emoji Cheat Sheet](https://www.webpagefx.com/tools/emoji-cheat-sheet)
-* [Malven's Flexbox Cheatsheet](https://flexbox.malven.co/)
-* [Malven's Grid Cheatsheet](https://grid.malven.co/)
-* [Img Shields](https://shields.io)
-* [GitHub Pages](https://pages.github.com)
-* [Font Awesome](https://fontawesome.com)
-* [React Icons](https://react-icons.github.io/react-icons/search)
+* [othneildrew README template](https://github.com/othneildrew/Best-README-Template/tree/master)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -231,19 +202,15 @@ Use this space to list resources you find helpful and would like to give credit 
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/othneildrew/Best-README-Template.svg?style=for-the-badge
+[contributors-shield]: https://img.shields.io/github/contributors/Jordan527/TSI-Ticketing-System.svg?style=for-the-badge
 [contributors-url]: https://github.com/Jordan527/TSI-Ticketing-System/graphs/contributors
-
-[forks-shield]: https://img.shields.io/github/forks/othneildrew/Best-README-Template.svg?style=for-the-badge
+[forks-shield]: https://img.shields.io/github/forks/Jordan527/TSI-Ticketing-System.svg?style=for-the-badge
 [forks-url]: https://github.com/Jordan527/TSI-Ticketing-System/network/members
-
-[stars-shield]: https://img.shields.io/github/stars/othneildrew/Best-README-Template.svg?style=for-the-badge
+[stars-shield]: https://img.shields.io/github/stars/Jordan527/TSI-Ticketing-System.svg?style=for-the-badge
 [stars-url]: https://github.com/Jordan527/TSI-Ticketing-System/stargazers
-
-[issues-shield]: https://img.shields.io/github/issues/othneildrew/Best-README-Template.svg?style=for-the-badge
+[issues-shield]: https://img.shields.io/github/issues/Jordan527/TSI-Ticketing-System.svg?style=for-the-badge
 [issues-url]: https://github.com/Jordan527/TSI-Ticketing-System/issues
-
-[license-shield]: https://img.shields.io/github/license/othneildrew/Best-README-Template.svg?style=for-the-badge
+[license-shield]: https://img.shields.io/github/license/Jordan527/TSI-Ticketing-System.svg?style=for-the-badge
 [license-url]: https://github.com/Jordan527/TSI-Ticketing-System/blob/master/LICENSE.txt
 
 [product-screenshot]: images/screenshot.png
