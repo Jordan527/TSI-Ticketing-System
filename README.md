@@ -100,6 +100,9 @@ The TSI Ticketing System is a comprehensive bug ticketing system designed to str
 ### Built With
 
 * [![Flask][Flask.com]][Flask-url]
+* [![AWS][AWS.com]][AWS-url]
+* [![PowerAutomate][PowerAutomate.com]][PowerAutomate-url]
+* [![Teams][Teams.com]][Teams-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -331,7 +334,11 @@ Distributed under the MIT License. See `LICENSE.md` for more information.
 [license-shield]: https://img.shields.io/github/license/Jordan527/TSI-Ticketing-System.svg?style=for-the-badge
 [license-url]: https://github.com/Jordan527/TSI-Ticketing-System/blob/master/LICENSE.md
 
-[product-screenshot]: images/screenshot.png
-
 [Flask.com]: https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white
 [Flask-url]: https://flask.palletsprojects.com/en/3.0.x/
+[AWS.com]: https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white
+[AWS-url]: https://aws.amazon.com
+[PowerAutomate.com]: https://img.shields.io/badge/power%20automate-blue?style=for-the-badge&logo=power%20automate
+[PowerAutomate-url]: https://www.microsoft.com/en-gb/power-platform/products/power-automate 
+[Teams.com]: https://img.shields.io/badge/MS%20Teams-white?style=for-the-badge&logo=microsoft%20teams
+[Teams-url]: https://www.microsoft.com/en-gb/microsoft-teams/group-chat-software
