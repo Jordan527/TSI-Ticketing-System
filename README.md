@@ -60,6 +60,7 @@
       <a href="#setup">Setup</a>
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#installation">Installation</a></li>
         <li><a href="#create-an-ngrok-account">Create an Ngrok account</a></li>
         <li><a href="#create-a-new-team-in-ms-teams">Create a new team in MS Teams</a></li>
         <li><a href="#build-a-power-automate-solution">Build a Power Automate Solution</a></li>
@@ -114,6 +115,11 @@ The TSI Ticketing System is a comprehensive bug ticketing system designed to str
 To get run your own version of the TSI Ticketing System, follow the instructions below.
 
 ### Prerequisites
+* Python ^3.12
+* Premium Power Automate account
+* AWS Account
+
+### Installation
 1. `git clone` the repository.
 ```sh
 git clone https://github.com/Jordan527/TSI-Ticketing-System.git
@@ -160,53 +166,100 @@ pip install -r requirements.txt
 3.  Click `+ New solution` at the top left of the screen, fill in the fields and click `Create`.
 4.  Create the first workflow.
     1. In the solution click `+ New` > `Automation` > `Cloud flow` > `Instant`.
-    2. Search for and select `Manually trigger a flow` as your trigger from Power Automate.
-       1. Leave the inputs blank.
-    3. Click the `+` button, search for and add `Post card in a chat or channel`.
-       1. Select the `Post As` field to be `Flow bot`.
-       2. Select the `Post In` field to be `Channel`.
-       3. Select the `Team` field to be the team you set up in step 1.
-       4. Select the `Channel` field to be the channel you set up in step 1.
-       5. Paste the json from `TSI Ticket.json` into the `Adaptive Card` field.
-       6. Click `Show all` advanced parameters.
-       7. Give an ID to your card and put in into the `Card Type ID` field.
-    4. Save this workflow.
-5.  Create the second workflow.
+5. Search for and select `Manually trigger a flow` as your trigger from Power Automate.
+   1. Leave the inputs blank.
+6. Click the `+` button, search for and add `Post card in a chat or channel`.
+  <br />
+  <table>
+  <tr>
+  <td> Post As </td><td> Flow bot </td>
+  </tr>
+  <tr>
+  <td> Post In </td><td> Channel </td>
+  </tr>
+  <tr>
+  <td> Team </td><td> &lt;Target team&gt; </td>
+  </tr>
+  <tr>
+  <td> Channel </td><td> &lt;Target channel&gt; </td>
+  </tr>
+  <tr>
+  <td> Channel </td><td> &lt;Target channel&gt; </td>
+  </tr>
+  <tr>
+  <td> Adaptive Card </td><td> &lt;Adaptive card JSON&gt; </td>
+  </tr>
+  <tr>
+  <td> Card Type Id </td><td> &lt;Card type&gt; </td>
+  </tr>
+  </table>
+
+> [!NOTE]
+> * To use the adaptive card from this project, use `TSI Ticket.json`.
+> * The field 'Card Type Id' can be found under 'Advanced parameters'. 'Card Type Id' can be any value but must stay consistent across flows.
+
+7. Save this workflow.
+8.  Create the second workflow.
     1. In the solution click `+ New` > `Automation` > `Cloud flow` > `Automated`.
-    2. Search for and select `When someone responds to an adaptive card` as your trigger from MS Teams.
-       1. Paste the json from `TSI Ticket.json` into the `Inputs Adaptive Card` field.
-       2. Use the same ID used in the first workflow in the `Card Type Id` field.
-    3. Click `+ New step` and search for, then select `HTTP`.
-       1. Select the `Method` field to be `POST`.
-       2. Paste your free static domain name from ngrok with an `https://` in front in the `URL` field.
-          1. The whole URL should look like this: `https://your-domain-name.ngrok-free.app/`
-       3. Click the `Switch Headers to text mode` button on the right of the `Headers` section and paste in the following headers:
-          ```json
-          {
-            "Accept": "*/*",
-            "Content-Type": "application/json",
-            "Host": "your-domain-name.ngrok-free.app",
-            "User-Agent": "PowerAutomateWorkflow",
-            "Accept-Encoding": "gzip, deflate, br",
-            "Connection": "keep-alive"
-          }
-          ```
-       4. Make sure to replace `your-domain-name` with your actual domain name.
-       5. Paste the following into the `Body` field:
-          ```json
-          {
-              "title": <dynamic-data>,
-              "description": <dynamic-data>,
-              "priority": <dynamic-data>
-          }
-          ```
-       6. Replace `<dynamic-data>` with dynamic data from `When someone responds to an adaptive card` called `title`, `description`, and `priority`.
-    4. Click `+ New step` and search for, then select `Reply with a message in a channel`.
-       1. Leave `Post as` field to be `Flow bot`.
-       2. Select the `Post in` field to be `Chat with Flow bot`.
-       3. Select the `Recipient` field to be dynamic data of `Responder User ID` from `When someone responds to an adaptive card`.
-       4. Write a message in the `Message` field using the link variable to link to the message and the body dynamic data to get the response body.
-    5. Save this workflow.
+9. Search for and select `When someone responds to an adaptive card` as your trigger from MS Teams.
+   <br />
+   <table>
+    <tr>
+    <td> Input Adaptive Card </td><td>  &lt;Adaptive card json&gt; </td>
+    </tr>
+    <tr>
+    <td> Card Type Id </td><td> &lt;Card type&gt; </td>
+    </tr>
+    </table>
+
+> [!NOTE]
+> * The json for the adaptive card should be the same as in the previous workflow.
+> * The card type id should be the same as in the previous workflow.
+
+10. Click `+ New step` and search for, then select `HTTP`.
+  <br />
+  <table>
+  <tr>
+  <td> Method </td><td> Post </td>
+  </tr>
+  <tr>
+  <td> URL </td><td> &lt;Domain&gt; </td>
+  </tr>
+  <tr>
+  <td> Body </td><td>
+    <pre lang="json">
+    {
+        "title": "&lt;dynamic-data&gt;",
+        "priority": "&lt;dynamic-data&gt;"
+        "description": "&lt;dynamic-data&gt;"
+    }
+    </pre>
+  </td>
+  </tr>
+  </table>
+
+> [!NOTE]
+> * You can use your free static domain from Ngrok with `https://` at in from of the url and `/` at the end in the URL field.
+> * Replace `<dynamic-data>` with dynamic data from `When someone responds to an adaptive card` called `title`, `description`, and `priority`.
+
+11. Click `+ New step` and search for, then select `Reply with a message in a channel`.
+<br />
+<table>
+<tr>
+<td> Post as </td><td> Flow bot </td>
+</tr>
+<tr>
+<td> Post in </td><td> Chat with Flow bot </td>
+</tr>
+<tr>
+<td> Recipient </td><td> dynamic data of `Responder User ID` from `When someone responds to an adaptive card` </td>
+</tr>
+<tr>
+<td> Message </td><td> &lt;Message&gt; </td>
+</tr>
+</table>
+
+12. Save this workflow.
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -240,30 +293,36 @@ pip install -r requirements.txt
 - Run the ngrok domain using the command `ngrok http --domain=your-domain-name.ngrok-free.app 5000` (make sure it is running on port **5000**) in a terminal.
 - In a separate terminal, run the Python flask app using the command `flask run` in the **same folder** that your flask app is located.
 - In the first Power Automate workflow click `Run` at the top to generate the card in the chosen channel
-<br></br>
+<br />
+
 ![Run Workflow](./Images/startWorkflow.png)
 
 ## Usage
 1. Fill out the form in the MS Teams Channel
-<br></br>
+<br />
+
 ![Adaptive Card ](./Images/adaptiveCard.png)
 
 2. Submit the form
 3. Check the sqs are of your aws console for if a message has come through
-<br></br>
+<br />
+
 ![AWS Queue List ](./Images/awsQueueList.png)
 
 4. Click on a queue
 5. Click `Send and Receive Messages` on the top
-<br></br>
+<br />
+
 ![Send and Receive Messages ](./Images/sendAndReceive.png)
 
 6.Click `Poll for Messages` in `Receiving Messages`
-<br></br>
+<br />
+
 ![Poll Messages ](./Images/pollMessages.png)
 
 7. You should see a list of messages
-<br></br>
+<br />
+
 ![SQS Messages ](./Images/sqsMessages.png)
 8. Click on a message to see its contents
 
