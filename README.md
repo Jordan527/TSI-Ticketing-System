@@ -60,9 +60,8 @@
       <a href="#setup">Setup</a>
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#create-a-new-team-in-ms-teams">Create a new team in MS Teams</a></li>
-        <li><a href="#add-required-apps-to-ms-teams">Add required Apps to MS Teams</a></li>
         <li><a href="#create-an-ngrok-account">Create an Ngrok account</a></li>
+        <li><a href="#create-a-new-team-in-ms-teams">Create a new team in MS Teams</a></li>
         <li><a href="#build-a-power-automate-solution">Build a Power Automate Solution</a></li>
       </ul>
     </li>
@@ -112,13 +111,19 @@ The TSI Ticketing System is a comprehensive bug ticketing system designed to str
 To get run your own version of the TSI Ticketing System, follow the instructions below.
 
 ### Prerequisites
+1. `git clone` the repository.
+```sh
+git clone https://github.com/Jordan527/TSI-Ticketing-System.git
+```
 
-1. Python `pip` install the following libraries.
+2. Python `pip` install the following libraries.
 * `Flask`
+  
   ```sh
   pip install flask
   ```
 * `boto3`
+  
   ```sh
   pip install boto3
   ```
@@ -128,26 +133,20 @@ Alternatively, use the following command:
 pip install -r requirements.txt
 ```
 
+### Create an Ngrok account.
+1. Go to [https://ngrok.com/](https://ngrok.com/) and sign up
+2. Follow the installation steps.
+3. In the `Deploy your app online` section, select the second tab `Static Domain`.
+4. Click the link to claim your free static domain, and save the command presented, it should look like this: `ngrok http --domain=your-domain-name.ngrok-free.app 80`
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 ### Create a new team in MS Teams
 1. Click the `+` button on the Teams tab of MS Teams and select `Create team`.
 2. Select `From scratch` > `Public`, then give your new team a name and description, and click `Create`.
 3. Create a new channel in the team by clicking the ellipsis button next to the team name, then `Add channel`.
 4. Give the channel a name and select `Standard access`.
 
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-### Add required Apps to MS Teams
-Click the ellipsis button on the left bar and search for `Developer Portal` and add this to teams (right-click to pin the app to the left bar).
-
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-### Create an Ngrok account.
-1. Go to [https://ngrok.com/](https://ngrok.com/) and sign up
-2. Follow the installation steps.
-3. In the `Deploy your app online` section, select the second tab `Static Domain`.
-4. Click the link to claim your free static domain, and save the command presented, it should look like this: `ngrok http --domain=your-domain-name.ngrok-free.app 80`
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
