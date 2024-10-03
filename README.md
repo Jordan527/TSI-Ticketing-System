@@ -116,7 +116,6 @@ To get run your own version of the TSI Ticketing System, follow the instructions
 
 ### Prerequisites
 * Python ^3.12
-* Premium Power Automate account
 * AWS Account
 
 ### Installation
@@ -128,14 +127,14 @@ git clone https://github.com/Jordan527/TSI-Ticketing-System.git
 2. Python `pip` install the following libraries.
 * `Flask`
   
-  ```sh
-  pip install flask
-  ```
+```sh
+pip install flask
+```
 * `boto3`
   
-  ```sh
-  pip install boto3
-  ```
+```sh
+pip install boto3
+```
 
 Alternatively, use the following command:
 ```sh
@@ -159,110 +158,15 @@ pip install -r requirements.txt
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-### Build a Power Automate Solution.
+### Create an outgoing webhook in MS Teams
+1. Click the `...` on the team name and select `Manage team`
+2. Navigate to the `Apps`
+3. Click the `Create an outgoing webhook` button above the list of apps
+4. Add a name to the webhook (this will be used for calling the bot)
+5. Add your Ngrok URL as the calback url, which should match the following format: `your-domain-name.ngrok-free.app`
+6. Add a description
+7. Click the `Create` button
 
-1.  Navigate to [Power Automate Solutions](https://make.powerautomate.com).
-2.  Click `Solutions`
-3.  Click `+ New solution` at the top left of the screen, fill in the fields and click `Create`.
-4.  Create the first workflow.
-    1. In the solution click `+ New` > `Automation` > `Cloud flow` > `Instant`.
-5. Search for and select `Manually trigger a flow` as your trigger from Power Automate.
-   1. Leave the inputs blank.
-6. Click the `+` button, search for and add `Post card in a chat or channel`.
-  <br />
-  <table>
-  <tr>
-  <td> Post As </td><td> Flow bot </td>
-  </tr>
-  <tr>
-  <td> Post In </td><td> Channel </td>
-  </tr>
-  <tr>
-  <td> Team </td><td> &lt;Target team&gt; </td>
-  </tr>
-  <tr>
-  <td> Channel </td><td> &lt;Target channel&gt; </td>
-  </tr>
-  <tr>
-  <td> Channel </td><td> &lt;Target channel&gt; </td>
-  </tr>
-  <tr>
-  <td> Adaptive Card </td><td> &lt;Adaptive card JSON&gt; </td>
-  </tr>
-  <tr>
-  <td> Card Type Id </td><td> &lt;Card type&gt; </td>
-  </tr>
-  </table>
-
-> [!NOTE]
-> * To use the adaptive card from this project, use `TSI Ticket.json`.
-> * The field 'Card Type Id' can be found under 'Advanced parameters'. 'Card Type Id' can be any value but must stay consistent across flows.
-
-7. Save this workflow.
-8.  Create the second workflow.
-    1. In the solution click `+ New` > `Automation` > `Cloud flow` > `Automated`.
-9. Search for and select `When someone responds to an adaptive card` as your trigger from MS Teams.
-   <br />
-   <table>
-    <tr>
-    <td> Input Adaptive Card </td><td>  &lt;Adaptive card json&gt; </td>
-    </tr>
-    <tr>
-    <td> Card Type Id </td><td> &lt;Card type&gt; </td>
-    </tr>
-    </table>
-
-> [!NOTE]
-> * The json for the adaptive card should be the same as in the previous workflow.
-> * The card type id should be the same as in the previous workflow.
-
-10. Click `+ New step` and search for, then select `HTTP`.
-  <br />
-  <table>
-  <tr>
-  <td> Method </td><td> Post </td>
-  </tr>
-  <tr>
-  <td> URL </td><td> &lt;Domain&gt; </td>
-  </tr>
-  <tr>
-  <td> Body </td><td>
-    <pre lang="json">
-    {
-        "title": "&lt;dynamic-data&gt;",
-        "priority": "&lt;dynamic-data&gt;"
-        "description": "&lt;dynamic-data&gt;"
-    }
-    </pre>
-  </td>
-  </tr>
-  </table>
-
-> [!NOTE]
-> * You can use your free static domain from Ngrok with `https://` at in from of the url and `/` at the end in the URL field.
-> * Replace `<dynamic-data>` with dynamic data from `When someone responds to an adaptive card` called `title`, `description`, and `priority`.
-
-11. Click `+ New step` and search for, then select `Reply with a message in a channel`.
-<br />
-<table>
-<tr>
-<td> Post as </td><td> Flow bot </td>
-</tr>
-<tr>
-<td> Post in </td><td> Chat with Flow bot </td>
-</tr>
-<tr>
-<td> Recipient </td><td> dynamic data of `Responder User ID` from `When someone responds to an adaptive card` </td>
-</tr>
-<tr>
-<td> Message </td><td> &lt;Message&gt; </td>
-</tr>
-</table>
-
-12. Save this workflow.
-
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## AWS Configuration
 
@@ -292,41 +196,43 @@ pip install -r requirements.txt
 ## Deployment
 - Run the ngrok domain using the command `ngrok http --domain=your-domain-name.ngrok-free.app 5000` (make sure it is running on port **5000**) in a terminal.
 - In a separate terminal, run the Python flask app using the command `flask run` in the **same folder** that your flask app is located.
-- In the first Power Automate workflow click `Run` at the top to generate the card in the chosen channel
-<br />
-
-![Run Workflow](./Images/startWorkflow.png)
 
 ## Usage
-1. Fill out the form in the MS Teams Channel
+1. Fill out the form in the MS Teams Channel using the following format, which is case insensitive:
+
+@`<webhook title>`
+<br />
+Title: `<title>`
+<br />
+Priority: `<priority (low, medium or high)>`
+<br />
+Description: `<description>`
 <br />
 
-![Adaptive Card ](./Images/adaptiveCard.png)
+![Teams Ticket](./Images/teamsTicket.png)
 
-2. Submit the form
-3. Check the sqs are of your aws console for if a message has come through
+2. Check the sqs are of your aws console for if a message has come through
 <br />
 
 ![AWS Queue List ](./Images/awsQueueList.png)
 
-4. Click on a queue
-5. Click `Send and Receive Messages` on the top
+3. Click on a queue
+4. Click `Send and Receive Messages` on the top
 <br />
 
 ![Send and Receive Messages ](./Images/sendAndReceive.png)
 
-6.Click `Poll for Messages` in `Receiving Messages`
+5. Click `Poll for Messages` in `Receiving Messages`
 <br />
 
 ![Poll Messages ](./Images/pollMessages.png)
 
-7. You should see a list of messages
+6. You should see a list of messages
 <br />
 
 ![SQS Messages ](./Images/sqsMessages.png)
-8. Click on a message to see its contents
+7. Click on a message to see its contents
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- ROADMAP -->
 ## Roadmap
