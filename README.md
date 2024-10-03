@@ -198,23 +198,16 @@ Create a `.env` file at the root level of the project with the following variabl
 * `AWS_ACCESS_KEY_ID`
 * `AWS_SECRET_ACCESS_KEY`
 * `AWS_REGION`
-
-<br />
-
 * `SQS_DLQ_NAME`
 * `SQS_LOW_PRIORITY_NAME`
 * `SQS_MEDIUM_PRIORITY_NAME`
 * `SQS_HIGH_PRIORITY_NAME`
-
-<br />
-
 * `LAMBDA_LOW_PRIORITY_NAME`
 * `LAMBDA_MEDIUM_PRIORITY_NAME`
 * `LAMBDA_HIGH_PRIORITY_NAME`
-
-<br />
-
 * `S3_BUCKET_NAME`
+* `IAM_POLICY_NAME`
+* `IAM_ROLE_NAME`
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -270,7 +263,7 @@ Description: `<description>`
     - [x] Medium
     - [x] High
 - [ ] Add Lambda functions to forward tickets to the relevant channels from the SQS queues
-    - [ ] Low priority to a s3 bucket
+    - [x] Low priority to a s3 bucket
     - [ ] Medium priority to a trello board
     - [ ] High priority to a slack channel
 
