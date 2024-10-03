@@ -92,7 +92,6 @@ The TSI Ticketing System is a comprehensive bug ticketing system designed to str
 * Bug Reporting: Users can easily report bugs by filling out a structured form within the application, providing essential details such as bug description, severity, screenshots, and steps to reproduce.
 * Ticket Tracking: Facilitates real-time tracking of bug tickets, allowing developers and managers to monitor the status of reported issues, assign tasks, and set priorities.
 * Integration with Microsoft Teams: Seamless integration with Microsoft Teams enables automatic notifications and updates on bug ticket status changes, ensuring effective communication among team members.
-* Power Automate Workflows: Automates repetitive tasks and workflows using Power Automate, streamlining processes such as bug assignment, notification delivery, and status updates.
 * AWS Cloud Infrastructure: Hosted on AWS, offering scalability, reliability, and security, ensuring high availability and performance for handling bug tracking operations.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -102,11 +101,9 @@ The TSI Ticketing System is a comprehensive bug ticketing system designed to str
 
 * [![Flask][Flask.com]][Flask-url]
 * [![AWS][AWS.com]][AWS-url]
-* [![PowerAutomate][PowerAutomate.com]][PowerAutomate-url]
 * [![Teams][Teams.com]][Teams-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 
 <!-- SETUP -->
@@ -136,12 +133,18 @@ pip install flask
 pip install boto3
 ```
 
+* `python-dotenv`
+
+```sh
+pip install python-dotenv
+```
+
 Alternatively, use the following command:
 ```sh
 pip install -r requirements.txt
 ```
 
-### Create an Ngrok account.
+### Create an Ngrok account
 1. Go to [https://ngrok.com/](https://ngrok.com/) and sign up
 2. Follow the installation steps.
 3. In the `Deploy your app online` section, select the second tab `Static Domain`.
@@ -167,6 +170,7 @@ pip install -r requirements.txt
 6. Add a description
 7. Click the `Create` button
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## AWS Configuration
 
@@ -186,16 +190,39 @@ pip install -r requirements.txt
    2. Click `Create access key`.
    3. Save both the public and private access keys somewhere safe, not in plain text.
 
-### AWS Configure
-1. Download AWS CLI from [https://aws.amazon.com/cli/](https://aws.amazon.com/cli/).
-2. Run the command `aws configure` in a terminal and complete the steps (choose a region for minimal latency and/or cost).
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+
+### Configure the environment variables
+Create a `.env` file at the root level of the project with the following variables:
+* `AWS_ACCESS_KEY_ID`
+* `AWS_SECRET_ACCESS_KEY`
+* `AWS_REGION`
+
+<br />
+
+* `SQS_DLQ_NAME`
+* `SQS_LOW_PRIORITY_NAME`
+* `SQS_MEDIUM_PRIORITY_NAME`
+* `SQS_HIGH_PRIORITY_NAME`
+
+<br />
+
+* `LAMBDA_LOW_PRIORITY_NAME`
+* `LAMBDA_MEDIUM_PRIORITY_NAME`
+* `LAMBDA_HIGH_PRIORITY_NAME`
+
+<br />
+
+* `S3_BUCKET_NAME`
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Deployment
 - Run the ngrok domain using the command `ngrok http --domain=your-domain-name.ngrok-free.app 5000` (make sure it is running on port **5000**) in a terminal.
 - In a separate terminal, run the Python flask app using the command `flask run` in the **same folder** that your flask app is located.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Usage
 1. Fill out the form in the MS Teams Channel using the following format, which is case insensitive:
@@ -303,7 +330,5 @@ Distributed under the MIT License. See `LICENSE.md` for more information.
 [Flask-url]: https://flask.palletsprojects.com/en/3.0.x/
 [AWS.com]: https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white
 [AWS-url]: https://aws.amazon.com
-[PowerAutomate.com]: https://img.shields.io/badge/power%20automate-blue?style=for-the-badge&logo=power%20automate
-[PowerAutomate-url]: https://www.microsoft.com/en-gb/power-platform/products/power-automate 
 [Teams.com]: https://img.shields.io/badge/MS%20Teams-white?style=for-the-badge&logo=microsoft%20teams
 [Teams-url]: https://www.microsoft.com/en-gb/microsoft-teams/group-chat-software
