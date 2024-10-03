@@ -33,7 +33,7 @@ def hook():
                 sendToQueue({"title": title, "description": description}, "medium-priority-queue")
             case "high":
                 sendToQueue({"title": title, "description": description}, "high-priority-queue")
-        text = f"The following ticket has been created:\n\nTitle: {match.group(1)}\n\nPriority: {match.group(2)}\n\nDescription: {match.group(3)}"
+        text = "Your ticket has been submitted successfully"
         return respond(text)
     except Exception as e:
         print(e)
