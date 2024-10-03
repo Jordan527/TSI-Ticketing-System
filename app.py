@@ -87,7 +87,7 @@ def sendToQueue(payload, sqsName):
     json_payload = json.dumps(payload)
     
     sqs = boto3.client("sqs")
-    url = sqs.get_queue_by_name(QueueName=sqsName)["QueueUrl"]
+    url = sqs.get_queue_url(QueueName=sqsName)["QueueUrl"]
     
     # queue_attributes = sqs.get_queue_attributes(QueueUrl=url, AttributeNames=['QueueArn'])
         
@@ -103,7 +103,7 @@ def initializeSQS():
     sqs = boto3.client("sqs")
 
     try:
-        dql_url = sqs.get_queue_by_name(QueueName=sqs_dlq_name)["QueueUrl"]
+        dql_url = sqs.get_queue_url(QueueName=sqs_dlq_name)["QueueUrl"]
     except:
         dql_url = sqs.create_queue(QueueName=sqs_dlq_name)["QueueUrl"]
 
@@ -121,17 +121,17 @@ def initializeSQS():
         }
 
         try:
-            sqs.get_queue_by_name(QueueName=sqs_low_priority_name)
+            sqs.get_queue_url(QueueName=sqs_low_priority_name)
         except:
             sqs.create_queue(QueueName=sqs_low_priority_name, Attributes=attributes)
         
         try:
-            sqs.get_queue_by_name(QueueName=sqs_medium_priority_name)
+            sqs.get_queue_url(QueueName=sqs_medium_priority_name)
         except:
             sqs.create_queue(QueueName=sqs_medium_priority_name, Attributes=attributes)
 
         try:
-            sqs.get_queue_by_name(QueueName=sqs_high_priority_name)
+            sqs.get_queue_url(QueueName=sqs_high_priority_name)
         except:
             sqs.create_queue(QueueName=sqs_high_priority_name, Attributes=attributes)
     except Exception as e:

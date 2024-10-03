@@ -264,12 +264,15 @@ Description: `<description>`
 <!-- ROADMAP -->
 ## Roadmap
 
-- [x] Use an SQS queue
-- [ ] Add Lambda functions 
-- [ ] Send tickets to their relevant destinations
-    - [ ] High priority to a slack channel
-    - [ ] Medium priority to a trello board
+- [x] Get ticket data from the user
+- [x] Send the ticket to one of three SQS queues depending on it's priority
+    - [x] Low
+    - [x] Medium
+    - [x] High
+- [ ] Add Lambda functions to forward tickets to the relevant channels from the SQS queues
     - [ ] Low priority to a s3 bucket
+    - [ ] Medium priority to a trello board
+    - [ ] High priority to a slack channel
 
 See the [open issues](https://github.com/Jordan527/TSI-Ticketing-System/issues) for a full list of proposed features (and known issues).
 
