@@ -287,7 +287,7 @@ Description: `<description>`
     - [x] Low
     - [x] Medium
     - [x] High
-- [ ] Add Lambda functions to forward tickets to the relevant channels from the SQS queues
+- [x] Add Lambda functions to forward tickets to the relevant channels from the SQS queues
     - [x] Low priority to a s3 bucket
     - [x] Medium priority to a trello board
     - [x] High priority to a slack channel
