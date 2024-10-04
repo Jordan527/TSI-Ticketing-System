@@ -193,6 +193,16 @@ pip install -r requirements.txt
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## Slack App Configuration
+1. Navigate to https://api.slack.com/apps 
+2. Click the `Create New App` button and select the `From scratch` option
+3. Enter a name and workspace before clicking the `Create App` button
+4. Navigate to the `Incoming Webhooks` tab under `Features` and active incoming webhooks
+5. Click the `Add New Webhook to Workspace` button and select a channel
+6. Make a note of the webhook URL
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 ## Configure the environment variables
 Create a `.env` file at the root level of the project with the following variables:
 - `AWS_ACCESS_KEY_ID`
@@ -221,6 +231,8 @@ Create a `.env` file at the root level of the project with the following variabl
 - `TRELLO_API_TOKEN`
 - `TRELLO_BOARD_ID`
 - `TRELLO_LIST_NAME`
+
+- `SLACK_URL`
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -278,7 +290,7 @@ Description: `<description>`
 - [ ] Add Lambda functions to forward tickets to the relevant channels from the SQS queues
     - [x] Low priority to a s3 bucket
     - [x] Medium priority to a trello board
-    - [ ] High priority to a slack channel
+    - [x] High priority to a slack channel
 - [ ] Monitor changes to the environment variables so that infrastructure can be managed between sessions
 
 <!-- See the [open issues](https://github.com/Jordan527/TSI-Ticketing-System/issues) for a full list of proposed features (and known issues). -->
