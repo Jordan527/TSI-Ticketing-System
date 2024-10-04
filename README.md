@@ -121,28 +121,13 @@ To get run your own version of the TSI Ticketing System, follow the instructions
 git clone https://github.com/Jordan527/TSI-Ticketing-System.git
 ```
 
-2. Python `pip` install the following libraries.
-* `Flask`
-  
-```sh
-pip install flask
-```
-* `boto3`
-  
-```sh
-pip install boto3
-```
+2. Python `pip` install the python libraries.
 
-* `python-dotenv`
-
-```sh
-pip install python-dotenv
-```
-
-Alternatively, use the following command:
 ```sh
 pip install -r requirements.txt
 ```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ### Create an Ngrok account
 1. Go to [https://ngrok.com/](https://ngrok.com/) and sign up
@@ -172,9 +157,7 @@ pip install -r requirements.txt
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## AWS Configuration
-
-### IAM User
+## AWS IAM Configuration
 1. Open the AWS Management Console and navigate to `IAM`.
 2. Select `Users` on the left panel then click `Create user`.
 3. Enter a name like `Ticket Bot` and click `Next`.
@@ -192,22 +175,52 @@ pip install -r requirements.txt
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## Trello Integration Configuration
+1. navigate to https://trello.com/power-ups/admin/ and login with the account you would like the service to use. The account **must** have access to the trello board
+2. Navigate to the `Power-Ups` tab and click the `New` button
 
-### Configure the environment variables
+![Trello admin page](./Images/trelloAdmin.png)
+
+3. Fill out all fields in the form except from the `Iframe connector URL` and click `Create`
+
+![alt text](./Images/trelloIntegration.png)
+
+4. Navigate to the `Api Key` tab and click the `Generate a new API key` button
+
+![alt text](./Images/trelloGenerateAPI.png)
+
+5. Save both the key and secret somewhere safe, not in plain text.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Configure the environment variables
 Create a `.env` file at the root level of the project with the following variables:
-* `AWS_ACCESS_KEY_ID`
-* `AWS_SECRET_ACCESS_KEY`
-* `AWS_REGION`
-* `SQS_DLQ_NAME`
-* `SQS_LOW_PRIORITY_NAME`
-* `SQS_MEDIUM_PRIORITY_NAME`
-* `SQS_HIGH_PRIORITY_NAME`
-* `LAMBDA_LOW_PRIORITY_NAME`
-* `LAMBDA_MEDIUM_PRIORITY_NAME`
-* `LAMBDA_HIGH_PRIORITY_NAME`
-* `S3_BUCKET_NAME`
-* `IAM_POLICY_NAME`
-* `IAM_ROLE_NAME`
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_REGION`
+
+- `SQS_DLQ_NAME`
+- `SQS_LOW_PRIORITY_NAME`
+- `SQS_MEDIUM_PRIORITY_NAME`
+- `SQS_HIGH_PRIORITY_NAME`
+
+- `LAMBDA_LOW_PRIORITY_NAME`
+- `LAMBDA_MEDIUM_PRIORITY_NAME`
+- `LAMBDA_HIGH_PRIORITY_NAME`
+
+- `S3_BUCKET_NAME`
+
+- `LOW_PRIORITY_IAM_POLICY_NAME`
+- `LOW_PRIORITY_IAM_ROLE_NAME`
+- `MEDIUM_PRIORITY_IAM_POLICY_NAME`
+- `MEDIUM_PRIORITY_IAM_ROLE_NAME`
+- `HIGH_PRIORITY_IAM_POLICY_NAME`
+- `HIGH_PRIORITY_IAM_ROLE_NAME`
+
+- `TRELLO_API_KEY`
+- `TRELLO_API_TOKEN`
+- `TRELLO_BOARD_ID`
+- `TRELLO_LIST_NAME`
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -264,10 +277,11 @@ Description: `<description>`
     - [x] High
 - [ ] Add Lambda functions to forward tickets to the relevant channels from the SQS queues
     - [x] Low priority to a s3 bucket
-    - [ ] Medium priority to a trello board
+    - [x] Medium priority to a trello board
     - [ ] High priority to a slack channel
+- [ ] Monitor changes to the environment variables so that infrastructure can be managed between sessions
 
-See the [open issues](https://github.com/Jordan527/TSI-Ticketing-System/issues) for a full list of proposed features (and known issues).
+<!-- See the [open issues](https://github.com/Jordan527/TSI-Ticketing-System/issues) for a full list of proposed features (and known issues). -->
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
