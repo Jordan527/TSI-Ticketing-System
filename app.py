@@ -167,12 +167,13 @@ def initialiseS3():
         if "BucketAlreadyOwnedByYou" not in str(e):
             shutdown(e)
 
-def initialiseSQSPolicies():
+def initialiseIAM():
     iam = boto3.client("iam")
     queues = [sqs_lp_name, sqs_mp_name, sqs_hp_name]
     policies = [lp_iam_policy_name, mp_iam_policy_name, hp_iam_policy_name]
+    roles = [lp_iam_role_name, mp_iam_role_name, hp_iam_role_name]
 
-    for queue, policy in zip(queues, policies):
+    for queue, policy, role in zip(queues, policies, roles):
         try:
             aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
             try:
@@ -201,115 +202,126 @@ def initialiseSQSPolicies():
                         ]
                     })
                 )
+            if policy == lp_iam_policy_name:
+                s3_policy_arn = f'arn:aws:iam::{aws_account_id}:policy/{lp_iam_policy_name}-s3'
+                try:
+                    iam.get_policy(PolicyArn=s3_policy_arn)
+                except:
+                    iam.create_policy(
+                        PolicyName=f'{lp_iam_policy_name}-s3',
+                        PolicyDocument=json.dumps({
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:PutObject",
+                                    ],
+                                    "Resource": f"arn:aws:s3:::{s3_bucket_name}/*"
+                                }
+                            ]
+                        })
+                    )
+        except Exception as e:
+            shutdown(e)
+        
+        try:
+            try:
+                iam.get_role(RoleName=role)
+            except:
+                iam.create_role(
+                    RoleName=role,
+                    AssumeRolePolicyDocument=json.dumps({
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Principal": {
+                                    "Service": "lambda.amazonaws.com"
+                                },
+                                "Action": "sts:AssumeRole"
+                            }
+                        ]
+                    })
+                )
+                iam.attach_role_policy(
+                    RoleName=role,
+                    PolicyArn=f'arn:aws:iam::{aws_account_id}:policy/{policy}'
+                )
+                if policy == lp_iam_policy_name:
+                    iam.attach_role_policy(
+                        RoleName=role,
+                        PolicyArn=f'arn:aws:iam::{aws_account_id}:policy/{lp_iam_policy_name}-s3'
+                    )
         except Exception as e:
             shutdown(e)
 
-def initialiseLPIAM():
-    iam = boto3.client("iam")
-    try:
-        aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
-        s3_policy_arn = f'arn:aws:iam::{aws_account_id}:policy/{lp_iam_policy_name}-s3'
-        sqs_policy_arn = f'arn:aws:iam::{aws_account_id}:policy/{lp_iam_policy_name}'
+def initialiseLambda(trello_list_id):
+    lambda_client = boto3.client("lambda")
+    aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
+    lambdas = [lambda_lp_name, lambda_mp_name, lambda_hp_name]
+    functions = [lp_lambda, mp_lambda, hp_lambda]
+    roles = [lp_iam_role_name, mp_iam_role_name, hp_iam_role_name]
+    queues = [sqs_lp_name, sqs_mp_name, sqs_hp_name]
+
+    for lambda_name, function, role, queue in zip(lambdas, functions, roles, queues):
         try:
-            iam.get_policy(PolicyArn=s3_policy_arn)
-        except:
-            iam.create_policy(
-                PolicyName=f'{lp_iam_policy_name}-s3',
-                PolicyDocument=json.dumps({
-                    "Version": "2012-10-17",
-                    "Statement": [
-                        {
-                            "Effect": "Allow",
-                            "Action": [
-                                "s3:PutObject",
-                            ],
-                            "Resource": f"arn:aws:s3:::{s3_bucket_name}/*"
-                        }
-                    ]
-                })
-            )        
-        try:
-            iam.get_role(RoleName=lp_iam_role_name)
-        except:
-            iam.create_role(
-                RoleName=lp_iam_role_name,
-                AssumeRolePolicyDocument=json.dumps({
-                    "Version": "2012-10-17",
-                    "Statement": [
-                        {
-                            "Effect": "Allow",
-                            "Principal": {
-                                "Service": "lambda.amazonaws.com"
-                            },
-                            "Action": "sts:AssumeRole"
-                        }
-                    ]
-                })
-            )
-            iam.attach_role_policy(
-                RoleName=lp_iam_role_name,
-                PolicyArn=s3_policy_arn
-            )
-            iam.attach_role_policy(
-                RoleName=lp_iam_role_name,
-                PolicyArn=sqs_policy_arn
-            )
-    except Exception as e:
-        shutdown(e)
+            try:
+                lambda_client.get_function(FunctionName=lambda_name)
+            except:
+                function_name = function.__name__
+                function_string = inspect.getsource(function)
+                function_string = function_string.replace(f"{function_name}", "lambda_handler")
+                match function_name:
+                    case "lp_lambda":
+                        function_string = function_string.replace("<bucket_name>", s3_bucket_name)
+                        function_string = function_string.replace("<region_name>", aws_region)
+                    case "mp_lambda":
+                        function_string = function_string.replace("<trello_api_key>", trello_api_key)
+                        function_string = function_string.replace("<trello_api_token>", trello_api_token)
+                        function_string = function_string.replace("<trello_list_id>", trello_list_id)
+                    case "hp_lambda":
+                        function_string = function_string.replace("<slack_url>", slack_url)
 
-def initialiseLPLambda():
-    try:
-        lambda_client = boto3.client("lambda")
-        aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
-        try:
-            lambda_client.get_function(FunctionName=lambda_lp_name)
-        except:
-            function_string = inspect.getsource(lp_lambda)
-            function_string = function_string.replace("lp_lambda", "lambda_handler")
-            function_string = function_string.replace("<bucket_name>", s3_bucket_name)
-            function_string = function_string.replace("<region_name>", aws_region)
+                with open(f"./{function_name}.py", "w") as f:
+                    f.write(function_string)
 
-            
-            with open("./lp_lambda.py", "w") as f:
-                f.write(function_string)
+                if os.path.exists("./lambda_function.zip"):
+                    os.remove("./lambda_function.zip")
 
-            if os.path.exists("./lambda_function.zip"):
-                os.remove("./lambda_function.zip")
+                with zipfile.ZipFile("./lambda_function.zip", "w") as z:
+                    z.write(f"./{function_name}.py", arcname="lambda_function.py")
 
-            with zipfile.ZipFile("./lp_lambda.zip", "w") as z:
-                z.write("./lp_lambda.py", arcname="lambda_function.py")
-
-            for _ in range(10):
-                try:
-                    with open("./lp_lambda.zip", "rb") as f:
-                        lambda_client.create_function(
-                            FunctionName=lambda_lp_name,
-                            Runtime='python3.8',
-                            Role=f'arn:aws:iam::{aws_account_id}:role/{lp_iam_role_name}',
-                            Handler='lambda_function.lambda_handler',
-                            Code={'ZipFile': f.read()},
-                            Timeout=30,
-                            MemorySize=128,
-                            Publish=True
-                        )
-                        lambda_client.create_event_source_mapping(
-                            EventSourceArn=f'arn:aws:sqs:{aws_region}:{aws_account_id}:{sqs_lp_name}',
-                            FunctionName=lambda_lp_name,
-                            Enabled=True,
-                            BatchSize=10
-                        )
-                    break
-                except Exception as e:
-                    if "The role defined for the function cannot be assumed by Lambda" not in str(e):
+                for _ in range(10):
+                    try:
+                        with open("./lambda_function.zip", "rb") as f:
+                            lambda_client.create_function(
+                                FunctionName=lambda_name,
+                                Runtime='python3.8',
+                                Role=f'arn:aws:iam::{aws_account_id}:role/{role}',
+                                Handler='lambda_function.lambda_handler',
+                                Code={'ZipFile': f.read()},
+                                Timeout=30,
+                                MemorySize=128,
+                                Publish=True
+                            )
+                            lambda_client.create_event_source_mapping(
+                                EventSourceArn=f'arn:aws:sqs:{aws_region}:{aws_account_id}:{queue}',
+                                FunctionName=lambda_name,
+                                Enabled=True,
+                                BatchSize=10
+                            )
                         break
-                    print("Waiting for IAM role to be ready")
-                    time.sleep(2)
+                    except Exception as e:
+                        if "The role defined for the function cannot be assumed by Lambda" not in str(e):
+                            break
+                        print("Waiting for IAM role to be ready")
+                        time.sleep(2)
 
-
-            os.remove("./lp_lambda.zip")
-            os.remove("./lp_lambda.py")
-    except Exception as e:
-        shutdown(e)
+                os.remove("./lambda_function.zip")
+                os.remove(f"./{function_name}.py")
+        except Exception as e:
+            return shutdown(e)
 
 def lp_lambda(event, context):
     import boto3
@@ -339,91 +351,6 @@ def lp_lambda(event, context):
             "status" : 500,
             "body" : "S3 upload failed"
         }
-
-def initialiseMPIAM():
-    iam = boto3.client("iam")
-    try:
-        aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
-        sqs_policy_arn = f'arn:aws:iam::{aws_account_id}:policy/{mp_iam_policy_name}'     
-        try:
-            iam.get_role(RoleName=mp_iam_role_name)
-        except:
-            iam.create_role(
-                RoleName=mp_iam_role_name,
-                AssumeRolePolicyDocument=json.dumps({
-                    "Version": "2012-10-17",
-                    "Statement": [
-                        {
-                            "Effect": "Allow",
-                            "Principal": {
-                                "Service": "lambda.amazonaws.com"
-                            },
-                            "Action": "sts:AssumeRole"
-                        }
-                    ]
-                })
-            )
-            iam.attach_role_policy(
-                RoleName=mp_iam_role_name,
-                PolicyArn=sqs_policy_arn
-            )
-    except Exception as e:
-        shutdown(e)
-
-def initialiseMPLambda(trello_list_id):
-    try:
-        lambda_client = boto3.client("lambda")
-        aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
-        try:
-            lambda_client.get_function(FunctionName=lambda_mp_name)
-        except:
-            function_string = inspect.getsource(mp_lambda)
-            function_string = function_string.replace("mp_lambda", "lambda_handler")
-            function_string = function_string.replace("<trello_api_key>", trello_api_key)
-            function_string = function_string.replace("<trello_api_token>", trello_api_token)
-            function_string = function_string.replace("<trello_list_id>", trello_list_id)
-
-            
-            with open("./mp_lambda.py", "w") as f:
-                f.write(function_string)
-
-            if os.path.exists("./lambda_function.zip"):
-                os.remove("./lambda_function.zip")
-
-            with zipfile.ZipFile("./mp_lambda.zip", "w") as z:
-                z.write("./mp_lambda.py", arcname="lambda_function.py")
-
-            for _ in range(10):
-                try:
-                    with open("./mp_lambda.zip", "rb") as f:
-                        lambda_client.create_function(
-                            FunctionName=lambda_mp_name,
-                            Runtime='python3.8',
-                            Role=f'arn:aws:iam::{aws_account_id}:role/{mp_iam_role_name}',
-                            Handler='lambda_function.lambda_handler',
-                            Code={'ZipFile': f.read()},
-                            Timeout=30,
-                            MemorySize=128,
-                            Publish=True
-                        )
-                        lambda_client.create_event_source_mapping(
-                            EventSourceArn=f'arn:aws:sqs:{aws_region}:{aws_account_id}:{sqs_mp_name}',
-                            FunctionName=lambda_mp_name,
-                            Enabled=True,
-                            BatchSize=10
-                        )
-                    break
-                except Exception as e:
-                    if "The role defined for the function cannot be assumed by Lambda" not in str(e):
-                        break
-                    print("Waiting for IAM role to be ready")
-                    time.sleep(2)
-
-
-            os.remove("./mp_lambda.zip")
-            os.remove("./mp_lambda.py")
-    except Exception as e:
-        shutdown(e)
 
 def mp_lambda(event, context):
     import json
@@ -457,91 +384,6 @@ def mp_lambda(event, context):
             "status" : 500,
             "body" : "Trello upload failed"
         }
-
-def initialiseHPIAM():
-    iam = boto3.client("iam")
-    try:
-        aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
-        sqs_policy_arn = f'arn:aws:iam::{aws_account_id}:policy/{hp_iam_policy_name}'     
-        try:
-            iam.get_role(RoleName=hp_iam_role_name)
-        except:
-            iam.create_role(
-                RoleName=hp_iam_role_name,
-                AssumeRolePolicyDocument=json.dumps({
-                    "Version": "2012-10-17",
-                    "Statement": [
-                        {
-                            "Effect": "Allow",
-                            "Principal": {
-                                "Service": "lambda.amazonaws.com"
-                            },
-                            "Action": "sts:AssumeRole"
-                        }
-                    ]
-                })
-            )
-            iam.attach_role_policy(
-                RoleName=hp_iam_role_name,
-                PolicyArn=sqs_policy_arn
-            )
-    except Exception as e:
-        shutdown(e)
-
-def initialiseHPLambda():
-    try:
-        lambda_client = boto3.client("lambda")
-        aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
-        try:
-            lambda_client.get_function(FunctionName=lambda_hp_name)
-        except:
-            function_string = inspect.getsource(hp_lambda)
-            function_string = function_string.replace("hp_lambda", "lambda_handler")
-            function_string = function_string.replace("<slack_url>", slack_url)
-
-            
-            with open("./hp_lambda.py", "w") as f:
-                f.write(function_string)
-
-            if os.path.exists("./lambda_function.zip"):
-                os.remove("./lambda_function.zip")
-
-            with zipfile.ZipFile("./hp_lambda.zip", "w") as z:
-                z.write("./hp_lambda.py", arcname="lambda_function.py")
-                
-                
-
-            for _ in range(10):
-                try:
-                    with open("./hp_lambda.zip", "rb") as f:
-                        lambda_client.create_function(
-                            FunctionName=lambda_hp_name,
-                            Runtime='python3.8',
-                            Role=f'arn:aws:iam::{aws_account_id}:role/{hp_iam_role_name}',
-                            Handler='lambda_function.lambda_handler',
-                            Code={'ZipFile': f.read()},
-                            Timeout=30,
-                            MemorySize=128,
-                            Publish=True
-                        )
-                        lambda_client.create_event_source_mapping(
-                            EventSourceArn=f'arn:aws:sqs:{aws_region}:{aws_account_id}:{sqs_hp_name}',
-                            FunctionName=lambda_hp_name,
-                            Enabled=True,
-                            BatchSize=10
-                        )
-                    break
-                except Exception as e:
-                    if "The role defined for the function cannot be assumed by Lambda" not in str(e):
-                        break
-                    print("Waiting for IAM role to be ready")
-                    time.sleep(2)
-
-
-            os.remove("./hp_lambda.zip")
-            os.remove("./hp_lambda.py")
-    except Exception as e:
-        shutdown(e)
 
 def hp_lambda(event, context):
     import json
@@ -603,20 +445,15 @@ def get_trello_list():
 
 with app.app_context():
     print("Initialising resources")
+
     boto3.setup_default_session(aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, region_name=aws_region)
+    trello_list_id = get_trello_list()
+    
     initializeSQS()
     initialiseS3()
-    initialiseSQSPolicies()
-
-    initialiseLPIAM()
-    initialiseLPLambda()
-
-    initialiseMPIAM()
-    trello_list_id = get_trello_list()
-    initialiseMPLambda(trello_list_id)
-
-    initialiseHPIAM()
-    initialiseHPLambda()
+    initialiseIAM()
+    initialiseLambda(trello_list_id)
+    
     print("Initialisation complete")
 
 if __name__ == "__main__":
