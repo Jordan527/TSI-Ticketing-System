@@ -157,7 +157,9 @@ pip install -r requirements.txt
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## AWS IAM Configuration
+## AWS Configuration
+
+### IAM User
 1. Open the AWS Management Console and navigate to `IAM`.
 2. Select `Users` on the left panel then click `Create user`.
 3. Enter a name like `Ticket Bot` and click `Next`.
@@ -172,6 +174,13 @@ pip install -r requirements.txt
    1. Select `Command Line Interface (CLI)`, tick the confirmation box and click `Next`.
    2. Click `Create access key`.
    3. Save both the public and private access keys somewhere safe, not in plain text.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+### AWS CLI
+1. Install the `AWS CLI`
+2. Run the `aws configure` command
+3. Enter your `AWS Access Key ID`, `AWS Secret Access Key` and `Default region name`
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -200,39 +209,6 @@ pip install -r requirements.txt
 4. Navigate to the `Incoming Webhooks` tab under `Features` and active incoming webhooks
 5. Click the `Add New Webhook to Workspace` button and select a channel
 6. Make a note of the webhook URL
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-## Configure the environment variables
-Create a `.env` file at the root level of the project with the following variables:
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
-- `AWS_REGION`
-
-- `SQS_DLQ_NAME`
-- `SQS_LOW_PRIORITY_NAME`
-- `SQS_MEDIUM_PRIORITY_NAME`
-- `SQS_HIGH_PRIORITY_NAME`
-
-- `LAMBDA_LOW_PRIORITY_NAME`
-- `LAMBDA_MEDIUM_PRIORITY_NAME`
-- `LAMBDA_HIGH_PRIORITY_NAME`
-
-- `S3_BUCKET_NAME`
-
-- `LOW_PRIORITY_IAM_POLICY_NAME`
-- `LOW_PRIORITY_IAM_ROLE_NAME`
-- `MEDIUM_PRIORITY_IAM_POLICY_NAME`
-- `MEDIUM_PRIORITY_IAM_ROLE_NAME`
-- `HIGH_PRIORITY_IAM_POLICY_NAME`
-- `HIGH_PRIORITY_IAM_ROLE_NAME`
-
-- `TRELLO_API_KEY`
-- `TRELLO_API_TOKEN`
-- `TRELLO_BOARD_ID`
-- `TRELLO_LIST_NAME`
-
-- `SLACK_URL`
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

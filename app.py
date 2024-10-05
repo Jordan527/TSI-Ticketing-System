@@ -7,38 +7,32 @@ import zipfile
 import inspect
 import time
 import requests
-from dotenv import load_dotenv
 
-load_dotenv(override=True)
+prefix = ""
+sqs_dlq = ""
+sqs_lp = ""
+sqs_mp = ""
+sqs_hp = ""
 
-aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
-aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
-aws_region = os.getenv("AWS_REGION")
+lp_lambda = ""
+mp_lambda = ""
+hp_lambda = ""
 
-sqs_dlq_name = os.getenv("SQS_DLQ_NAME")
-sqs_lp_name = os.getenv("SQS_LOW_PRIORITY_NAME")
-sqs_mp_name = os.getenv("SQS_MEDIUM_PRIORITY_NAME")
-sqs_hp_name = os.getenv("SQS_HIGH_PRIORITY_NAME")
+s3_bucket = ""
 
-lambda_lp_name = os.getenv("LAMBDA_LOW_PRIORITY_NAME")
-lambda_mp_name = os.getenv("LAMBDA_MEDIUM_PRIORITY_NAME")
-lambda_hp_name = os.getenv("LAMBDA_HIGH_PRIORITY_NAME")
+lp_iam_policy = ""
+lp_iam_role = ""
+mp_iam_policy = ""
+mp_iam_role = ""
+hp_iam_policy = ""
+hp_iam_role = ""
 
-s3_bucket_name = os.getenv("S3_BUCKET_NAME")
+trello_api_key = ""
+trello_api_token = ""
+trello_board_ID = ""
+trello_list_name = ""
 
-lp_iam_policy_name = os.getenv("LOW_PRIORITY_IAM_POLICY_NAME")
-lp_iam_role_name = os.getenv("LOW_PRIORITY_IAM_ROLE_NAME")
-mp_iam_policy_name = os.getenv("MEDIUM_PRIORITY_IAM_POLICY_NAME")
-mp_iam_role_name = os.getenv("MEDIUM_PRIORITY_IAM_ROLE_NAME")
-hp_iam_policy_name = os.getenv("HIGH_PRIORITY_IAM_POLICY_NAME")
-hp_iam_role_name = os.getenv("HIGH_PRIORITY_IAM_ROLE_NAME")
-
-trello_api_key = os.getenv("TRELLO_API_KEY")
-trello_api_token = os.getenv("TRELLO_API_TOKEN")
-trello_board_ID = os.getenv("TRELLO_BOARD_ID")
-trello_list_name = os.getenv("TRELLO_LIST_NAME")
-
-slack_url = os.getenv("SLACK_URL")
+slack_url = ""
 
 app = Flask(__name__)
 
@@ -67,13 +61,13 @@ def hook():
         match priority:
             case "low":
                 dict["Priority"] = "Low"
-                sendToQueue(dict, sqs_lp_name)
+                sendToQueue(dict, sqs_lp)
             case "medium":
                 dict["Priority"] = "Medium"
-                sendToQueue(dict, sqs_mp_name)
+                sendToQueue(dict, sqs_mp)
             case "high":
                 dict["Priority"] = "High"
-                sendToQueue(dict, sqs_hp_name)
+                sendToQueue(dict, sqs_hp)
         text = "Your ticket has been submitted successfully"
         return respond(text)
     except Exception as e:
@@ -110,8 +104,6 @@ def sendToQueue(payload, sqsName):
     
     sqs = boto3.client("sqs")
     url = sqs.get_queue_url(QueueName=sqsName)["QueueUrl"]
-    
-    # queue_attributes = sqs.get_queue_attributes(QueueUrl=url, AttributeNames=['QueueArn'])
         
     response = sqs.send_message( 
         QueueUrl=url, 
@@ -125,9 +117,9 @@ def initializeSQS():
     sqs = boto3.client("sqs")
 
     try:
-        dql_url = sqs.get_queue_url(QueueName=sqs_dlq_name)["QueueUrl"]
+        dql_url = sqs.get_queue_url(QueueName=sqs_dlq)["QueueUrl"]
     except:
-        dql_url = sqs.create_queue(QueueName=sqs_dlq_name)["QueueUrl"]
+        dql_url = sqs.create_queue(QueueName=sqs_dlq)["QueueUrl"]
 
     try:
         dlq_attributes = sqs.get_queue_attributes(QueueUrl=dql_url, AttributeNames=['QueueArn'])
@@ -143,39 +135,41 @@ def initializeSQS():
         }
 
         try:
-            sqs.get_queue_url(QueueName=sqs_lp_name)
+            sqs.get_queue_url(QueueName=sqs_lp)
         except:
-            sqs.create_queue(QueueName=sqs_lp_name, Attributes=attributes)
+            sqs.create_queue(QueueName=sqs_lp, Attributes=attributes)
         
         try:
-            sqs.get_queue_url(QueueName=sqs_mp_name)
+            sqs.get_queue_url(QueueName=sqs_mp)
         except:
-            sqs.create_queue(QueueName=sqs_mp_name, Attributes=attributes)
+            sqs.create_queue(QueueName=sqs_mp, Attributes=attributes)
 
         try:
-            sqs.get_queue_url(QueueName=sqs_hp_name)
+            sqs.get_queue_url(QueueName=sqs_hp)
         except:
-            sqs.create_queue(QueueName=sqs_hp_name, Attributes=attributes)
+            sqs.create_queue(QueueName=sqs_hp, Attributes=attributes)
     except Exception as e:
         shutdown(e)
 
 def initialiseS3():
     s3 = boto3.client("s3")
     try:
-        s3.create_bucket(Bucket=s3_bucket_name, CreateBucketConfiguration={'LocationConstraint': aws_region})
+        aws_region = boto3.session.Session().region_name
+        s3.create_bucket(Bucket=s3_bucket, CreateBucketConfiguration={'LocationConstraint': aws_region})
     except Exception as e:
         if "BucketAlreadyOwnedByYou" not in str(e):
             shutdown(e)
 
 def initialiseIAM():
     iam = boto3.client("iam")
-    queues = [sqs_lp_name, sqs_mp_name, sqs_hp_name]
-    policies = [lp_iam_policy_name, mp_iam_policy_name, hp_iam_policy_name]
-    roles = [lp_iam_role_name, mp_iam_role_name, hp_iam_role_name]
+    queues = [sqs_lp, sqs_mp, sqs_hp]
+    policies = [lp_iam_policy, mp_iam_policy, hp_iam_policy]
+    roles = [lp_iam_role, mp_iam_role, hp_iam_role]
 
     for queue, policy, role in zip(queues, policies, roles):
         try:
             aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
+            aws_region = boto3.session.Session().region_name
             try:
                 policy_arn = f'arn:aws:iam::{aws_account_id}:policy/{policy}'
                 iam.get_policy(PolicyArn=policy_arn)
@@ -202,13 +196,13 @@ def initialiseIAM():
                         ]
                     })
                 )
-            if policy == lp_iam_policy_name:
-                s3_policy_arn = f'arn:aws:iam::{aws_account_id}:policy/{lp_iam_policy_name}-s3'
+            if policy == lp_iam_policy:
+                s3_policy_arn = f'arn:aws:iam::{aws_account_id}:policy/{lp_iam_policy}-s3'
                 try:
                     iam.get_policy(PolicyArn=s3_policy_arn)
                 except:
                     iam.create_policy(
-                        PolicyName=f'{lp_iam_policy_name}-s3',
+                        PolicyName=f'{lp_iam_policy}-s3',
                         PolicyDocument=json.dumps({
                             "Version": "2012-10-17",
                             "Statement": [
@@ -217,7 +211,7 @@ def initialiseIAM():
                                     "Action": [
                                         "s3:PutObject",
                                     ],
-                                    "Resource": f"arn:aws:s3:::{s3_bucket_name}/*"
+                                    "Resource": f"arn:aws:s3:::{s3_bucket}/*"
                                 }
                             ]
                         })
@@ -248,10 +242,10 @@ def initialiseIAM():
                     RoleName=role,
                     PolicyArn=f'arn:aws:iam::{aws_account_id}:policy/{policy}'
                 )
-                if policy == lp_iam_policy_name:
+                if policy == lp_iam_policy:
                     iam.attach_role_policy(
                         RoleName=role,
-                        PolicyArn=f'arn:aws:iam::{aws_account_id}:policy/{lp_iam_policy_name}-s3'
+                        PolicyArn=f'arn:aws:iam::{aws_account_id}:policy/{lp_iam_policy}-s3'
                     )
         except Exception as e:
             shutdown(e)
@@ -259,10 +253,10 @@ def initialiseIAM():
 def initialiseLambda(trello_list_id):
     lambda_client = boto3.client("lambda")
     aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
-    lambdas = [lambda_lp_name, lambda_mp_name, lambda_hp_name]
-    functions = [lp_lambda, mp_lambda, hp_lambda]
-    roles = [lp_iam_role_name, mp_iam_role_name, hp_iam_role_name]
-    queues = [sqs_lp_name, sqs_mp_name, sqs_hp_name]
+    lambdas = [lp_lambda, mp_lambda, hp_lambda]
+    functions = [lp_lambda_function, mp_lambda_function, hp_lambda_function]
+    roles = [lp_iam_role, mp_iam_role, hp_iam_role]
+    queues = [sqs_lp, sqs_mp, sqs_hp]
 
     for lambda_name, function, role, queue in zip(lambdas, functions, roles, queues):
         try:
@@ -273,14 +267,15 @@ def initialiseLambda(trello_list_id):
                 function_string = inspect.getsource(function)
                 function_string = function_string.replace(f"{function_name}", "lambda_handler")
                 match function_name:
-                    case "lp_lambda":
-                        function_string = function_string.replace("<bucket_name>", s3_bucket_name)
+                    case "lp_lambda_function":
+                        aws_region = boto3.session.Session().region_name
+                        function_string = function_string.replace("<bucket_name>", s3_bucket)
                         function_string = function_string.replace("<region_name>", aws_region)
-                    case "mp_lambda":
+                    case "mp_lambda_function":
                         function_string = function_string.replace("<trello_api_key>", trello_api_key)
                         function_string = function_string.replace("<trello_api_token>", trello_api_token)
                         function_string = function_string.replace("<trello_list_id>", trello_list_id)
-                    case "hp_lambda":
+                    case "hp_lambda_function":
                         function_string = function_string.replace("<slack_url>", slack_url)
 
                 with open(f"./{function_name}.py", "w") as f:
@@ -323,7 +318,7 @@ def initialiseLambda(trello_list_id):
         except Exception as e:
             return shutdown(e)
 
-def lp_lambda(event, context):
+def lp_lambda_function(event, context):
     import boto3
     import json
     import time
@@ -352,7 +347,7 @@ def lp_lambda(event, context):
             "body" : "S3 upload failed"
         }
 
-def mp_lambda(event, context):
+def mp_lambda_function(event, context):
     import json
     import urllib3
 
@@ -385,7 +380,7 @@ def mp_lambda(event, context):
             "body" : "Trello upload failed"
         }
 
-def hp_lambda(event, context):
+def hp_lambda_function(event, context):
     import json
     import urllib3
 
@@ -397,7 +392,7 @@ def hp_lambda(event, context):
         data = {"text": message}
         
         r = http.request("POST",
-                        "https://hooks.slack.com/services/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",
+                        "<slack_url>",
                         body = json.dumps(data),
                         headers = {"Content-Type": "application/json"})
 
@@ -443,6 +438,54 @@ def get_trello_list():
     if list_id == "":
         return shutdown("List not found") 
 
+def get_secrets():
+    try:
+        secret_client = boto3.client("secretsmanager")
+        response = secret_client.list_secrets()
+        secrets = response["SecretList"]
+        requried_secrets = ["PREFIX", "TRELLO_API_KEY", "TRELLO_API_TOKEN", "TRELLO_BOARD_ID", "TRELLO_LIST_NAME", "SLACK_URL"]
+        for secret in secrets:
+            if secret["Name"] == "ticketing-app":
+                secret_value = secret_client.get_secret_value(SecretId=secret["ARN"])
+                secret_string = secret_value["SecretString"]
+                secret_dict = json.loads(secret_string)
+                missing_secrets = []
+                for key in requried_secrets:
+                    if key not in secret_dict:
+                        missing_secrets.append(key)
+                if missing_secrets:
+                    return shutdown(f"Missing secrets: {missing_secrets}")
+                else:
+                    global prefix, trello_api_key, trello_api_token, trello_board_ID, trello_list_name, slack_url
+                    prefix = secret_dict["PREFIX"]
+                    trello_api_key = secret_dict["TRELLO_API_KEY"]
+                    trello_api_token = secret_dict["TRELLO_API_TOKEN"]
+                    trello_board_ID = secret_dict["TRELLO_BOARD_ID"]
+                    trello_list_name = secret_dict["TRELLO_LIST_NAME"]
+                    slack_url = secret_dict["SLACK_URL"]
+                    return
+    except Exception as e:
+        return shutdown(e)
+
+def create_global_variables():
+    global prefix, sqs_dlq, sqs_lp, sqs_mp, sqs_hp, lp_lambda, mp_lambda, hp_lambda, s3_bucket, lp_iam_policy, lp_iam_role, mp_iam_policy, mp_iam_role, hp_iam_policy, hp_iam_role
+    sqs_dlq = f"{prefix}-DLQ"
+    sqs_lp = f"{prefix}-LP"
+    sqs_mp = f"{prefix}-MP"
+    sqs_hp = f"{prefix}-HP"
+
+    lp_lambda = f"{prefix}-LP"
+    mp_lambda = f"{prefix}-MP"
+    hp_lambda = f"{prefix}-HP"
+
+    s3_bucket = f"{prefix}-bucket"
+
+    lp_iam_policy = f"{prefix}-LP-Policy"
+    lp_iam_role = f"{prefix}-LP-Role"
+    mp_iam_policy = f"{prefix}-MP-Policy"
+    mp_iam_role = f"{prefix}-MP-Role"
+    hp_iam_policy = f"{prefix}-HP-Policy"
+    hp_iam_role = f"{prefix}-HP-Role"
 
 @app.route("/health", methods=["GET"])
 def health():
@@ -456,17 +499,20 @@ def initialise():
         return Response("Already initialised", status=200)
     print("Initialising resources")
 
-    boto3.setup_default_session(aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, region_name=aws_region)
+    get_secrets()
+    create_global_variables()
     trello_list_id = get_trello_list()
     
     initializeSQS()
     initialiseS3()
     initialiseIAM()
     initialiseLambda(trello_list_id)
-    
+
     print("Initialisation complete")
     initialised = True
     return Response("Initialised", status=200)
+
+initialise()
 
 
 if __name__ == "__main__":
