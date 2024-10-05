@@ -7,7 +7,7 @@ on:
 
 env:
   AWS_REGION: eu-west-2
-  ECR_REPOSITORY: tsi/ticketing-app    
+  ECR_REPOSITORY: tsi-ticketing-app    
 
 jobs:
   deploy:
