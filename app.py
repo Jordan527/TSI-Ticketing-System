@@ -443,7 +443,17 @@ def get_trello_list():
     if list_id == "":
         return shutdown("List not found") 
 
-with app.app_context():
+
+@app.route("/health", methods=["GET"])
+def health():
+    return Response("Healthy", status=200)
+
+initialised = False
+@app.route("/initialise", methods=["POST"])
+def initialise():
+    global initialised
+    if initialised:
+        return Response("Already initialised", status=200)
     print("Initialising resources")
 
     boto3.setup_default_session(aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, region_name=aws_region)
@@ -455,6 +465,9 @@ with app.app_context():
     initialiseLambda(trello_list_id)
     
     print("Initialisation complete")
+    initialised = True
+    return Response("Initialised", status=200)
+
 
 if __name__ == "__main__":
     app.run()
