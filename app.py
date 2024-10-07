@@ -113,6 +113,16 @@ def sendToQueue(payload, sqsName):
         ) 
     ) 
 
+def initialiseBoto3():
+    aws_region = str(os.environ.get("AWS_REGION"))
+    aws_access_key_id = str(os.environ.get("AWS_ACCESS_KEY_ID"))
+    aws_secret_access_key = str(os.environ.get("AWS_SECRET_ACCESS_KEY"))
+    if aws_region and aws_access_key_id and aws_secret_access_key:
+        boto3.setup_default_session(region_name=aws_region, aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)
+    else:
+        shutdown("AWS credentials not found")
+
+
 def initializeSQS():
     sqs = boto3.client("sqs")
 
@@ -408,12 +418,16 @@ def hp_lambda_function(event, context):
         }
 
 def shutdown(reason=""):
-    if reason:
-        print(reason)
-    else:
-        print("Error initializing resources")
-    print("Shutting down")
-    exit()
+    if reason: 
+        if type(reason) == str:
+            reason = "Error: " + reason
+        elif type(reason) == Exception:
+            reason = "Error: " + str(reason)
+        else:
+            reason = "Error"
+    if not reason:
+        reason = "Error initializing resources"
+    return Response(reason, status=500)
     
 def get_trello_list():
     url = f"https://api.trello.com/1/boards/{trello_board_ID}/lists"
@@ -499,6 +513,7 @@ def initialise():
         return Response("Already initialised", status=200)
     print("Initialising resources")
 
+    initialiseBoto3()
     get_secrets()
     create_global_variables()
     trello_list_id = get_trello_list()
@@ -511,8 +526,6 @@ def initialise():
     print("Initialisation complete")
     initialised = True
     return Response("Initialised", status=200)
-
-initialise()
 
 
 if __name__ == "__main__":

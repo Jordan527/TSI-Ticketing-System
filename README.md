@@ -63,16 +63,20 @@
         <li><a href="#installation">Installation</a></li>
         <li><a href="#create-an-ngrok-account">Create an Ngrok account</a></li>
         <li><a href="#create-a-new-team-in-ms-teams">Create a new team in MS Teams</a></li>
-        <li><a href="#build-a-power-automate-solution">Build a Power Automate Solution</a></li>
+        <li><a href="#create-an-outgoing-webhook-in-ms-teams">Create an outgoing webhook in MS Teams</a></li>
       </ul>
     </li>
     <li>
       <a href="#aws-configuration">AWS Configuration</a>
       <ul>
         <li><a href="#iam-user">IAM User</a></li>
-        <li><a href="#aws-configure">AWS Configure</a></li>
+        <li><a href="#aws-secret-manager">AWS Secret Manager</a></li>
       </ul>
     </li>
+    <li><a href="#trello-integration-configuration">Trello Integration Configuration</a></li>
+    <li><a href="#slack-app-configuration">Slack App Configuration</a></li>
+    <li><a href="#deployment">Deployment</a></li>
+    <li><a href="#usage">Usage</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
@@ -100,6 +104,8 @@ The TSI Ticketing System is a comprehensive bug ticketing system designed to str
 ### Built With
 
 * [![Flask][Flask.com]][Flask-url]
+* [![Ngrok][Ngrok.com]][Ngrok-url]
+* [![Compose][Compose.com]][Compose-url]
 * [![AWS][AWS.com]][AWS-url]
 * [![Teams][Teams.com]][Teams-url]
 
@@ -113,6 +119,7 @@ To get run your own version of the TSI Ticketing System, follow the instructions
 
 ### Prerequisites
 * Python ^3.12
+* Docker Compose
 * AWS Account
 
 ### Installation
@@ -158,7 +165,6 @@ pip install -r requirements.txt
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## AWS Configuration
-
 ### IAM User
 1. Open the AWS Management Console and navigate to `IAM`.
 2. Select `Users` on the left panel then click `Create user`.
@@ -177,10 +183,23 @@ pip install -r requirements.txt
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-### AWS CLI
-1. Install the `AWS CLI`
-2. Run the `aws configure` command
-3. Enter your `AWS Access Key ID`, `AWS Secret Access Key` and `Default region name`
+### AWS Secret Manager
+1. In the same AWS region as you would like to use for the rest of servcices, create an AWS secret
+2. Select `Other type of secret`
+3. Enter the following as plaintext, changing the values for your own
+```
+{
+  "PREFIX":"<prefix_name>",
+  "TRELLO_API_KEY":"<trello_api_key>",
+  "TRELLO_API_TOKEN":"<trello_api_token>",
+  "TRELLO_BOARD_ID":"<trello_board_id>",
+  "TRELLO_LIST_NAME":"<trello_list_name>",
+  "SLACK_URL":"<slack_app_name>"
+}
+```
+4. Click the `Next` button
+5. Enter a secret name and click `Next`
+6. Click `Next` again then click `Store`
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -213,8 +232,12 @@ pip install -r requirements.txt
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Deployment
-- Run the ngrok domain using the command `ngrok http --domain=your-domain-name.ngrok-free.app 5000` (make sure it is running on port **5000**) in a terminal.
-- In a separate terminal, run the Python flask app using the command `flask run` in the **same folder** that your flask app is located.
+1. Customise the following environment variables in `docker-compose.yaml`
+  - `AWS_REGION`
+  - `AWS_ACCESS_KEY_ID`
+  - `AWS_SECRET_ACCESS_KEY`
+  - `NGROK_TOKEN`
+2. Run `docker compose up -d`
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -326,6 +349,10 @@ Distributed under the MIT License. See `LICENSE.md` for more information.
 
 [Flask.com]: https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white
 [Flask-url]: https://flask.palletsprojects.com/en/3.0.x/
+[Ngrok.com]: https://img.shields.io/badge/ngrok%20-%20%2302238f?style=for-the-badge
+[Ngrok-url]: https://ngrok.com/
+[Compose.com]: https://img.shields.io/badge/Docker%20Compose%20-%20%231d63ed?style=for-the-badge&logo=docker&logoColor=white
+[Compose-url]: https://docs.docker.com/compose/
 [AWS.com]: https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white
 [AWS-url]: https://aws.amazon.com
 [Teams.com]: https://img.shields.io/badge/MS%20Teams-white?style=for-the-badge&logo=microsoft%20teams

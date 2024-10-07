@@ -27,8 +27,8 @@ RUN curl https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz -o
 RUN tar -xvf ngrok-stable-linux-amd64.tgz
 RUN mv ngrok /usr/local/bin
 
-# Set the authtoken for ngrok
-RUN ngrok config add-authtoken 2cJ8E4Ue6Yyt08bNLtnhe9re05A_6Cccz8gQ7gzgrpv9SAu5E
+# Ensure start.sh is executable
+RUN chmod +x start.sh
 
-# Wait for Flask to be running before executing the curl command
-CMD ["sh", "-c", "ngrok http --domain=arguably-chief-colt.ngrok-free.app 5000 & flask --debug run --host=0.0.0.0 --port=5000 & while ! curl -s http://localhost:5000/health > /dev/null; do sleep 1; done; curl -X POST http://localhost:5000/initialise || true; wait"]
+# Run start.sh
+CMD ["./start.sh"]
