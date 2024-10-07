@@ -236,6 +236,7 @@ pip install -r requirements.txt
   - `AWS_REGION`
   - `AWS_ACCESS_KEY_ID`
   - `AWS_SECRET_ACCESS_KEY`
+  - `NGROK_DOMAIN`
   - `NGROK_TOKEN`
 2. Run `docker compose up -d`
 

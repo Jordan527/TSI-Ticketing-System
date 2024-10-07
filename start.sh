@@ -2,8 +2,8 @@
 
 ngrok config add-authtoken $NGROK_TOKEN
 
-ngrok http --domain=arguably-chief-colt.ngrok-free.app 5000 &
-flask --debug run --host=0.0.0.0 --port=5000 &
+ngrok http --domain=$NGROK_DOMAIN 5000 &
+flask run --host=0.0.0.0 --port=5000 &
 
 while ! curl -s http://localhost:5000/health > /dev/null; do
     sleep 1

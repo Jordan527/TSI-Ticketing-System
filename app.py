@@ -7,6 +7,9 @@ import zipfile
 import inspect
 import time
 import requests
+import logging
+
+aws_region = ""
 
 prefix = ""
 sqs_dlq = ""
@@ -33,6 +36,11 @@ trello_board_ID = ""
 trello_list_name = ""
 
 slack_url = ""
+
+initialised = False
+initialisation_error = False
+exiting = False
+error_reason = ""
 
 app = Flask(__name__)
 
@@ -113,15 +121,92 @@ def sendToQueue(payload, sqsName):
         ) 
     ) 
 
+def initialiseLogging(logging_level=logging.INFO):
+    logger = logging.getLogger(__name__)
+    logging.basicConfig(filename="app.log", level=logging_level, format="%(asctime)s - %(message)s")
+
 def initialiseBoto3():
+    global aws_region
     aws_region = str(os.environ.get("AWS_REGION"))
     aws_access_key_id = str(os.environ.get("AWS_ACCESS_KEY_ID"))
     aws_secret_access_key = str(os.environ.get("AWS_SECRET_ACCESS_KEY"))
     if aws_region and aws_access_key_id and aws_secret_access_key:
+        boto3.Session()
         boto3.setup_default_session(region_name=aws_region, aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)
     else:
-        shutdown("AWS credentials not found")
+        log_error("AWS credentials not found", shutdown=True, initialisation=True)
 
+def get_secrets():
+    try:
+        secret_client = boto3.client("secretsmanager")
+        response = secret_client.list_secrets()
+        secrets = response["SecretList"]
+        requried_secrets = ["PREFIX", "TRELLO_API_KEY", "TRELLO_API_TOKEN", "TRELLO_BOARD_ID", "TRELLO_LIST_NAME", "SLACK_URL"]
+        for secret in secrets:
+            if secret["Name"] == "ticketing-app":
+                secret_value = secret_client.get_secret_value(SecretId=secret["ARN"])
+                secret_string = secret_value["SecretString"]
+                secret_dict = json.loads(secret_string)
+                missing_secrets = []
+                for key in requried_secrets:
+                    if key not in secret_dict:
+                        missing_secrets.append(key)
+                if missing_secrets:
+                    log_error(f"Missing secrets: {missing_secrets}", shutdown=True, initialisation=True)
+                else:
+                    global prefix, trello_api_key, trello_api_token, trello_board_ID, trello_list_name, slack_url
+                    prefix = secret_dict["PREFIX"]
+                    trello_api_key = secret_dict["TRELLO_API_KEY"]
+                    trello_api_token = secret_dict["TRELLO_API_TOKEN"]
+                    trello_board_ID = secret_dict["TRELLO_BOARD_ID"]
+                    trello_list_name = secret_dict["TRELLO_LIST_NAME"]
+                    slack_url = secret_dict["SLACK_URL"]
+                    return
+    except Exception as e:
+        log_error(e, shutdown=True, initialisation=True)
+
+def create_global_variables():
+    global prefix, sqs_dlq, sqs_lp, sqs_mp, sqs_hp, lp_lambda, mp_lambda, hp_lambda, s3_bucket, lp_iam_policy, lp_iam_role, mp_iam_policy, mp_iam_role, hp_iam_policy, hp_iam_role
+    sqs_dlq = f"{prefix}-DLQ"
+    sqs_lp = f"{prefix}-LP"
+    sqs_mp = f"{prefix}-MP"
+    sqs_hp = f"{prefix}-HP"
+
+    lp_lambda = f"{prefix}-LP"
+    mp_lambda = f"{prefix}-MP"
+    hp_lambda = f"{prefix}-HP"
+
+    s3_bucket = f"{prefix}-bucket"
+
+    lp_iam_policy = f"{prefix}-LP-Policy"
+    lp_iam_role = f"{prefix}-LP-Role"
+    mp_iam_policy = f"{prefix}-MP-Policy"
+    mp_iam_role = f"{prefix}-MP-Role"
+    hp_iam_policy = f"{prefix}-HP-Policy"
+    hp_iam_role = f"{prefix}-HP-Role"
+
+def get_trello_list():
+    url = f"https://api.trello.com/1/boards/{trello_board_ID}/lists"
+
+    headers = {
+        "Accept": "application/json"
+    }
+
+    query = {
+        'key': trello_api_key,
+        'token': trello_api_token
+    }
+
+    response = requests.request("GET", url, headers=headers, params=query)
+    lists = json.loads(response.text)
+
+    list_id = ""
+    for list in lists:
+        if list["name"].lower() == trello_list_name.lower():
+            list_id = list["id"]
+            return list_id
+    if list_id == "":
+        log_error("Trello list not found", shutdown=True, initialisation=True) 
 
 def initializeSQS():
     sqs = boto3.client("sqs")
@@ -159,16 +244,15 @@ def initializeSQS():
         except:
             sqs.create_queue(QueueName=sqs_hp, Attributes=attributes)
     except Exception as e:
-        shutdown(e)
+        log_error(e, shutdown=True, initialisation=True)
 
 def initialiseS3():
     s3 = boto3.client("s3")
     try:
-        aws_region = boto3.session.Session().region_name
         s3.create_bucket(Bucket=s3_bucket, CreateBucketConfiguration={'LocationConstraint': aws_region})
     except Exception as e:
         if "BucketAlreadyOwnedByYou" not in str(e):
-            shutdown(e)
+            log_error(e, shutdown=True, initialisation=True)
 
 def initialiseIAM():
     iam = boto3.client("iam")
@@ -179,7 +263,6 @@ def initialiseIAM():
     for queue, policy, role in zip(queues, policies, roles):
         try:
             aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
-            aws_region = boto3.session.Session().region_name
             try:
                 policy_arn = f'arn:aws:iam::{aws_account_id}:policy/{policy}'
                 iam.get_policy(PolicyArn=policy_arn)
@@ -227,7 +310,7 @@ def initialiseIAM():
                         })
                     )
         except Exception as e:
-            shutdown(e)
+            log_error(e, shutdown=True, initialisation=True)
         
         try:
             try:
@@ -258,7 +341,7 @@ def initialiseIAM():
                         PolicyArn=f'arn:aws:iam::{aws_account_id}:policy/{lp_iam_policy}-s3'
                     )
         except Exception as e:
-            shutdown(e)
+            log_error(e, shutdown=True, initialisation=True)
 
 def initialiseLambda(trello_list_id):
     lambda_client = boto3.client("lambda")
@@ -278,7 +361,6 @@ def initialiseLambda(trello_list_id):
                 function_string = function_string.replace(f"{function_name}", "lambda_handler")
                 match function_name:
                     case "lp_lambda_function":
-                        aws_region = boto3.session.Session().region_name
                         function_string = function_string.replace("<bucket_name>", s3_bucket)
                         function_string = function_string.replace("<region_name>", aws_region)
                     case "mp_lambda_function":
@@ -326,7 +408,7 @@ def initialiseLambda(trello_list_id):
                 os.remove("./lambda_function.zip")
                 os.remove(f"./{function_name}.py")
         except Exception as e:
-            return shutdown(e)
+            return log_error(e, shutdown=True, initialisation=True)
 
 def lp_lambda_function(event, context):
     import boto3
@@ -417,116 +499,107 @@ def hp_lambda_function(event, context):
             "body" : "Slack upload failed"
         }
 
-def shutdown(reason=""):
+def log_error(reason="", shutdown=False, initialisation=False):
+    global error_reason
     if reason: 
-        if type(reason) == str:
-            reason = "Error: " + reason
-        elif type(reason) == Exception:
-            reason = "Error: " + str(reason)
-        else:
-            reason = "Error"
+        reason = "Error: " + str(reason)
     if not reason:
         reason = "Error initializing resources"
-    return Response(reason, status=500)
+        
+    error_reason = reason
+    logging.error(reason)
+
+    if initialisation:
+        global initialisation_error
+        initialisation_error = True
+
+    if shutdown:
+        global exiting
+        exiting = True
+
+    # variables = get_variables()
+    # logging.info(variables)
     
-def get_trello_list():
-    url = f"https://api.trello.com/1/boards/{trello_board_ID}/lists"
-
-    headers = {
-        "Accept": "application/json"
-    }
-
-    query = {
-        'key': trello_api_key,
-        'token': trello_api_token
-    }
-
-    response = requests.request("GET", url, headers=headers, params=query)
-    lists = json.loads(response.text)
-
-    list_id = ""
-    for list in lists:
-        if list["name"].lower() == trello_list_name.lower():
-            list_id = list["id"]
-            return list_id
-    if list_id == "":
-        return shutdown("List not found") 
-
-def get_secrets():
-    try:
-        secret_client = boto3.client("secretsmanager")
-        response = secret_client.list_secrets()
-        secrets = response["SecretList"]
-        requried_secrets = ["PREFIX", "TRELLO_API_KEY", "TRELLO_API_TOKEN", "TRELLO_BOARD_ID", "TRELLO_LIST_NAME", "SLACK_URL"]
-        for secret in secrets:
-            if secret["Name"] == "ticketing-app":
-                secret_value = secret_client.get_secret_value(SecretId=secret["ARN"])
-                secret_string = secret_value["SecretString"]
-                secret_dict = json.loads(secret_string)
-                missing_secrets = []
-                for key in requried_secrets:
-                    if key not in secret_dict:
-                        missing_secrets.append(key)
-                if missing_secrets:
-                    return shutdown(f"Missing secrets: {missing_secrets}")
-                else:
-                    global prefix, trello_api_key, trello_api_token, trello_board_ID, trello_list_name, slack_url
-                    prefix = secret_dict["PREFIX"]
-                    trello_api_key = secret_dict["TRELLO_API_KEY"]
-                    trello_api_token = secret_dict["TRELLO_API_TOKEN"]
-                    trello_board_ID = secret_dict["TRELLO_BOARD_ID"]
-                    trello_list_name = secret_dict["TRELLO_LIST_NAME"]
-                    slack_url = secret_dict["SLACK_URL"]
-                    return
-    except Exception as e:
-        return shutdown(e)
-
-def create_global_variables():
-    global prefix, sqs_dlq, sqs_lp, sqs_mp, sqs_hp, lp_lambda, mp_lambda, hp_lambda, s3_bucket, lp_iam_policy, lp_iam_role, mp_iam_policy, mp_iam_role, hp_iam_policy, hp_iam_role
-    sqs_dlq = f"{prefix}-DLQ"
-    sqs_lp = f"{prefix}-LP"
-    sqs_mp = f"{prefix}-MP"
-    sqs_hp = f"{prefix}-HP"
-
-    lp_lambda = f"{prefix}-LP"
-    mp_lambda = f"{prefix}-MP"
-    hp_lambda = f"{prefix}-HP"
-
-    s3_bucket = f"{prefix}-bucket"
-
-    lp_iam_policy = f"{prefix}-LP-Policy"
-    lp_iam_role = f"{prefix}-LP-Role"
-    mp_iam_policy = f"{prefix}-MP-Policy"
-    mp_iam_role = f"{prefix}-MP-Role"
-    hp_iam_policy = f"{prefix}-HP-Policy"
-    hp_iam_role = f"{prefix}-HP-Role"
+def get_variables():
+    output = ""
+    output += "Boto3 session:\n"
+    output += f"Region: {boto3.session.Session().region_name}\n"
+    output += f"Access key: {boto3.Session().get_credentials().access_key}\n"
+    output += f"Secret key: {boto3.Session().get_credentials().secret_key}\n"
+    output += "\nGlobal variables:\n"
+    output += f"prefix: {prefix}\n"
+    output += f"sqs_dlq: {sqs_dlq}\n"
+    output += f"sqs_lp: {sqs_lp}\n"
+    output += f"sqs_mp: {sqs_mp}\n"
+    output += f"sqs_hp: {sqs_hp}\n"
+    output += f"lp_lambda: {lp_lambda}\n"
+    output += f"mp_lambda: {mp_lambda}\n"
+    output += f"hp_lambda: {hp_lambda}\n"
+    output += f"s3_bucket: {s3_bucket}\n"
+    output += f"lp_iam_policy: {lp_iam_policy}\n"
+    output += f"lp_iam_role: {lp_iam_role}\n"
+    output += f"mp_iam_policy: {mp_iam_policy}\n"
+    output += f"mp_iam_role: {mp_iam_role}\n"
+    output += f"hp_iam_policy: {hp_iam_policy}\n"
+    output += f"hp_iam_role: {hp_iam_role}\n"
+    output += f"trello_api_key: {trello_api_key}\n"
+    output += f"trello_api_token: {trello_api_token}\n"
+    output += f"trello_board_ID: {trello_board_ID}\n"
+    output += f"trello_list_name: {trello_list_name}\n"
+    output += f"slack_url: {slack_url}\n"
+    return output
 
 @app.route("/health", methods=["GET"])
 def health():
     return Response("Healthy", status=200)
 
-initialised = False
 @app.route("/initialise", methods=["POST"])
 def initialise():
-    global initialised
+    global initialised, initialisation_error
     if initialised:
         return Response("Already initialised", status=200)
+    initialisation_error = False
     print("Initialising resources")
 
+    initialiseLogging()
+
     initialiseBoto3()
+    if initialisation_error:
+        return Response(error_reason, status=500)
     get_secrets()
+    if initialisation_error:
+        return Response(error_reason, status=500)
     create_global_variables()
+    if initialisation_error:
+        return Response(error_reason, status=500)
     trello_list_id = get_trello_list()
     
+    if initialisation_error:
+        return Response(error_reason, status=500)
     initializeSQS()
+    if initialisation_error:
+        return Response(error_reason, status=500)
     initialiseS3()
+    if initialisation_error:
+        return Response(error_reason, status=500)
     initialiseIAM()
+    if initialisation_error:
+        return Response(error_reason, status=500)
     initialiseLambda(trello_list_id)
+    if initialisation_error:
+        return Response(error_reason, status=500)
 
     print("Initialisation complete")
     initialised = True
     return Response("Initialised", status=200)
 
+@app.after_request
+def exit(response):
+    global exiting
+    if exiting:
+        logging.error("Exiting")
+        os._exit(1)
+    return response
 
 if __name__ == "__main__":
     app.run()
