@@ -1,4 +1,3 @@
 .venv/
 docker-compose.private.yaml
-app.log
-state.json
+data
