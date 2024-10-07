@@ -291,7 +291,9 @@ Description: `<description>`
     - [x] Low priority to a s3 bucket
     - [x] Medium priority to a trello board
     - [x] High priority to a slack channel
+- [x] Create a `Dockerfile` and `docker-compose.yaml` for easy deployment of the system
 - [ ] Monitor changes to the environment variables so that infrastructure can be managed between sessions
+- [ ] Create a lambda for the DLQ to notify an admin when a ticket is received
 
 <!-- See the [open issues](https://github.com/Jordan527/TSI-Ticketing-System/issues) for a full list of proposed features (and known issues). -->
 
