@@ -225,11 +225,11 @@ def reset_error():
 # Define the functions to get and save the state
 def get_state():
     try:
-        if os.path.exists("state.json"):
-            with open("state.json", "r") as f:
+        if os.path.exists("data/state.json"):
+            with open("data/state.json", "r") as f:
                 state = json.load(f)
         else:
-            with open("state.json", "w") as f:
+            with open("data/state.json", "w") as f:
                 json.dump({}, f)
             state = {}
         return state
@@ -262,7 +262,7 @@ def save_state(state, differences):
         if differences:
             for key in differences:
                 state[key] = globals()[key]
-            with open("state.json", "w") as f:
+            with open("data/state.json", "w") as f:
                 json.dump(state, f)
     except Exception as e:
         log_error(e, shutdown=True, initialisation=True)
@@ -310,7 +310,7 @@ def sendToQueue(payload, sqsName):
 # Define the functions to initialise the resources
 def initialiseLogging(logging_level=logging.INFO):
     logger = logging.getLogger(__name__)
-    logging.basicConfig(filename="app.log", level=logging_level, format="%(asctime)s - %(message)s")
+    logging.basicConfig(filename="data/app.log", level=logging_level, format="%(asctime)s - %(message)s")
 
 def initialiseBoto3(old_region=None):
     global aws_region

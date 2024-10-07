@@ -12,3 +12,7 @@ services:
       - AWS_SECRET_ACCESS_KEY=<YOUR_AWS_SECRET>
       - NGROK_DOMAIN=<YOUR_NGROK_DOMAIN>
       - NGROK_TOKEN=<YOUR_NGROK_TOKEN>
+    volumes:
+      - data:/app/data
+volumes:
+  data:
