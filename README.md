@@ -75,7 +75,13 @@
     </li>
     <li><a href="#trello-integration-configuration">Trello Integration Configuration</a></li>
     <li><a href="#slack-app-configuration">Slack App Configuration</a></li>
-    <li><a href="#deployment">Deployment</a></li>
+    <li>
+      <a href="#deployment">Deployment</a>
+      <ul>
+        <li><a href="#with-docker-compose">With Docker Compose</a></li>
+        <li><a href="#without-docker-compose">Without Docker Compose</a></li>
+      </ul>
+    </li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
@@ -233,6 +239,7 @@ pip install -r requirements.txt
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Deployment
+### With Docker Compose
 1. Customise the following environment variables in `docker-compose.yaml`
   - `AWS_REGION`
   - `AWS_ACCESS_KEY_ID`
@@ -241,8 +248,14 @@ pip install -r requirements.txt
   - `NGROK_TOKEN`
 2. Run `docker compose up -d`
 
-### Note
+#### Note
 If changes are made to the `AWS_REGION` value and the `PREFIX` value has not been changed, the system will attempt to create a new bucket in the new region, but will revert back to the original region for the bucket if the name is unavailable.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+### Without Docker Compose
+- Run the ngrok domain using the command `ngrok http --domain=your-domain-name.ngrok-free.app 5000` (make sure it is running on port **5000**) in a terminal.
+- In a separate terminal, run the Python flask app using the command `flask run` in the **same folder** that your flask app is located.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
