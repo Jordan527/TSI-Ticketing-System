@@ -37,13 +37,13 @@ trello_list_name = ""
 
 slack_url = ""
 
-initialised = False
 initialisation_error = False
 exiting = False
 error_reason = ""
 
 app = Flask(__name__)
 
+# Define the routes for the webhook
 @app.route("/", methods=["POST"])
 def hook():
     raw = request.get_json()
@@ -83,6 +83,191 @@ def hook():
         text = "There was an error processing your request"
         return respond(text)
 
+@app.route("/health", methods=["GET"])
+def health():
+    return Response("Healthy", status=200)
+
+@app.route("/initialise", methods=["POST"])
+def initialise():
+    reset_error()
+    print("Initialising resources")
+
+    initialiseLogging()
+
+    state = get_state()
+    if initialisation_error:
+        return Response(error_reason, status=500)
+
+    initialiseBoto3()
+    if initialisation_error:
+        return Response(error_reason, status=500)
+    
+    get_secrets()
+    if initialisation_error:
+        return Response(error_reason, status=500)
+    
+    differences = check_state(state)
+    if initialisation_error:
+        return Response(error_reason, status=500)
+
+    if state:
+        if differences:
+            if "prefix" in differences or "aws_region" in differences:
+                create_global_variables(state["prefix"])
+                if "aws_region" in differences:
+                    initialiseBoto3(state["aws_region"])
+
+                try:
+                    delete_lambda([lp_lambda, mp_lambda, hp_lambda])
+                    delete_all_iam_roles()
+                    delete_all_iam_policies()
+                    delete_s3_bucket()
+                    delete_all_queues()
+                except Exception as e:
+                    log_error(e, shutdown=True, initialisation=True)
+                    return Response(error_reason, status=500)
+                
+            elif "trello_api_key" in differences or "trello_api_token" in differences or "trello_board_ID" in differences or "trello_list_name" in differences:
+                try:
+                    create_global_variables()
+                    delete_lambda([mp_lambda])
+                except Exception as e:
+                    log_error(e, shutdown=True, initialisation=True)
+                    return Response(error_reason, status=500)
+                
+            elif "slack_url" in differences:
+                try:
+                    create_global_variables()
+                    delete_lambda([hp_lambda])
+                except Exception as e:
+                    log_error(e, shutdown=True, initialisation=True)
+                    return Response(error_reason, status=500)
+            
+            initialiseBoto3()
+            get_secrets()
+            if initialisation_error:
+                return Response(error_reason, status=500)
+
+    create_global_variables()
+    if initialisation_error:
+        return Response(error_reason, status=500)
+
+    trello_list_id = get_trello_list()
+    if initialisation_error:
+        return Response(error_reason, status=500)
+    
+    initializeSQS()
+    if initialisation_error:
+        return Response(error_reason, status=500)
+    
+    initialiseS3()
+    if initialisation_error:
+        if "conflicting conditional operation" in error_reason:
+            reset_error()
+            initialiseBoto3(state["aws_region"])
+            initialiseS3()
+            if initialisation_error:
+                return Response(error_reason, status=500)
+            initialiseBoto3()
+        else:
+            return Response(error_reason, status=500)
+    
+    initialiseIAMPolicies()
+    if initialisation_error:
+        return Response(error_reason, status=500)
+    
+    initialiseIAMRoles()
+    if initialisation_error:
+        return Response(error_reason, status=500)
+    
+    initialiseLambda(trello_list_id)
+    if initialisation_error:
+        return Response(error_reason, status=500)
+
+    save_state(state, differences)
+
+    print("Initialisation complete")
+    return Response("Initialised", status=200)
+
+@app.after_request
+def exit(response):
+    global exiting
+    if exiting:
+        logging.error("Exiting")
+        os._exit(1)
+    return response
+
+# Define the error handling function
+def log_error(reason="", shutdown=False, initialisation=False):
+    global error_reason
+    if reason: 
+        reason = "Error: " + str(reason)
+    if not reason:
+        reason = "Error initializing resources"
+        
+    error_reason = reason
+    logging.error(reason)
+
+    if initialisation:
+        global initialisation_error
+        initialisation_error = True
+
+    if shutdown:
+        global exiting
+        exiting = True
+
+def reset_error():
+    global initialisation_error, exiting, error_reason
+    initialisation_error = False
+    exiting = False
+    error_reason = ""
+
+# Define the functions to get and save the state
+def get_state():
+    try:
+        if os.path.exists("state.json"):
+            with open("state.json", "r") as f:
+                state = json.load(f)
+        else:
+            with open("state.json", "w") as f:
+                json.dump({}, f)
+            state = {}
+        return state
+    except Exception as e:
+        log_error(e, shutdown=True, initialisation=True)
+        return {}
+    
+def check_state(state):
+    variables = {
+        "aws_region": aws_region,
+        "prefix": prefix,
+        "trello_api_key": trello_api_key,
+        "trello_api_token": trello_api_token,
+        "trello_board_ID": trello_board_ID,
+        "trello_list_name": trello_list_name,
+        "slack_url": slack_url
+    }
+    try:
+        differences = []
+        for key in variables:
+            if key not in state or state[key] != variables[key]:
+                differences.append(key)
+        return differences
+    except Exception as e:
+        log_error(e, shutdown=True, initialisation=True)
+        return []
+
+def save_state(state, differences):
+    try:
+        if differences:
+            for key in differences:
+                state[key] = globals()[key]
+            with open("state.json", "w") as f:
+                json.dump(state, f)
+    except Exception as e:
+        log_error(e, shutdown=True, initialisation=True)
+
+# Define the function to respond to the user
 def respond(text):
     payload = {
        "type":"message",
@@ -107,6 +292,7 @@ def respond(text):
     
     return Response(json.dumps(payload), status=200)
 
+# Define the function to send a message to the queue
 def sendToQueue(payload, sqsName):
     json_payload = json.dumps(payload)
     
@@ -121,13 +307,17 @@ def sendToQueue(payload, sqsName):
         ) 
     ) 
 
+# Define the functions to initialise the resources
 def initialiseLogging(logging_level=logging.INFO):
     logger = logging.getLogger(__name__)
     logging.basicConfig(filename="app.log", level=logging_level, format="%(asctime)s - %(message)s")
 
-def initialiseBoto3():
+def initialiseBoto3(old_region=None):
     global aws_region
-    aws_region = str(os.environ.get("AWS_REGION"))
+    if old_region:
+        aws_region = old_region
+    else:
+        aws_region = str(os.environ.get("AWS_REGION"))
     aws_access_key_id = str(os.environ.get("AWS_ACCESS_KEY_ID"))
     aws_secret_access_key = str(os.environ.get("AWS_SECRET_ACCESS_KEY"))
     if aws_region and aws_access_key_id and aws_secret_access_key:
@@ -138,9 +328,12 @@ def initialiseBoto3():
 
 def get_secrets():
     try:
-        secret_client = boto3.client("secretsmanager")
+        secret_client = boto3.client("secretsmanager", region_name=aws_region)
         response = secret_client.list_secrets()
         secrets = response["SecretList"]
+        if not secrets:
+            return log_error("No secrets found", shutdown=True, initialisation=True)
+        
         requried_secrets = ["PREFIX", "TRELLO_API_KEY", "TRELLO_API_TOKEN", "TRELLO_BOARD_ID", "TRELLO_LIST_NAME", "SLACK_URL"]
         for secret in secrets:
             if secret["Name"] == "ticketing-app":
@@ -165,8 +358,14 @@ def get_secrets():
     except Exception as e:
         log_error(e, shutdown=True, initialisation=True)
 
-def create_global_variables():
-    global prefix, sqs_dlq, sqs_lp, sqs_mp, sqs_hp, lp_lambda, mp_lambda, hp_lambda, s3_bucket, lp_iam_policy, lp_iam_role, mp_iam_policy, mp_iam_role, hp_iam_policy, hp_iam_role
+def create_global_variables(old_prefix=None):
+    if not old_prefix:
+        global prefix, sqs_dlq, sqs_lp, sqs_mp, sqs_hp, lp_lambda, mp_lambda, hp_lambda, s3_bucket, lp_iam_policy, lp_iam_role, mp_iam_policy, mp_iam_role, hp_iam_policy, hp_iam_role
+    else:
+        global sqs_dlq, sqs_lp, sqs_mp, sqs_hp, lp_lambda, mp_lambda, hp_lambda, s3_bucket, lp_iam_policy, lp_iam_role, mp_iam_policy, mp_iam_role, hp_iam_policy, hp_iam_role
+        prefix = old_prefix
+
+    
     sqs_dlq = f"{prefix}-DLQ"
     sqs_lp = f"{prefix}-LP"
     sqs_mp = f"{prefix}-MP"
@@ -212,11 +411,11 @@ def initializeSQS():
     sqs = boto3.client("sqs")
 
     try:
-        dql_url = sqs.get_queue_url(QueueName=sqs_dlq)["QueueUrl"]
-    except:
-        dql_url = sqs.create_queue(QueueName=sqs_dlq)["QueueUrl"]
+        try:
+            dql_url = sqs.get_queue_url(QueueName=sqs_dlq)["QueueUrl"]
+        except:
+            dql_url = sqs.create_queue(QueueName=sqs_dlq)["QueueUrl"]
 
-    try:
         dlq_attributes = sqs.get_queue_attributes(QueueUrl=dql_url, AttributeNames=['QueueArn'])
         dlq_arn = dlq_attributes['Attributes']['QueueArn']
 
@@ -229,22 +428,23 @@ def initializeSQS():
             'RedrivePolicy': json.dumps(redrive_policy)
         }
 
-        try:
-            sqs.get_queue_url(QueueName=sqs_lp)
-        except:
-            sqs.create_queue(QueueName=sqs_lp, Attributes=attributes)
-        
-        try:
-            sqs.get_queue_url(QueueName=sqs_mp)
-        except:
-            sqs.create_queue(QueueName=sqs_mp, Attributes=attributes)
-
-        try:
-            sqs.get_queue_url(QueueName=sqs_hp)
-        except:
-            sqs.create_queue(QueueName=sqs_hp, Attributes=attributes)
+        queues = [sqs_lp, sqs_mp, sqs_hp]
+        for queue in queues:
+            try:
+                sqs.get_queue_url(QueueName=queue)
+            except:
+                try:
+                    sqs.create_queue(QueueName=queue, Attributes=attributes)
+                except Exception as e:
+                    return log_error(e, shutdown=True, initialisation=True)
+                        
     except Exception as e:
-        log_error(e, shutdown=True, initialisation=True)
+        if "QueueDeletedRecently" not in str(e):
+            log_error(e, shutdown=True, initialisation=True)
+        else:
+            log_error(e)
+            time.sleep(10)
+            initializeSQS()
 
 def initialiseS3():
     s3 = boto3.client("s3")
@@ -254,15 +454,14 @@ def initialiseS3():
         if "BucketAlreadyOwnedByYou" not in str(e):
             log_error(e, shutdown=True, initialisation=True)
 
-def initialiseIAM():
+def initialiseIAMPolicies():
+    aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
     iam = boto3.client("iam")
     queues = [sqs_lp, sqs_mp, sqs_hp]
     policies = [lp_iam_policy, mp_iam_policy, hp_iam_policy]
-    roles = [lp_iam_role, mp_iam_role, hp_iam_role]
 
-    for queue, policy, role in zip(queues, policies, roles):
+    for queue, policy in zip(queues, policies):
         try:
-            aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
             try:
                 policy_arn = f'arn:aws:iam::{aws_account_id}:policy/{policy}'
                 iam.get_policy(PolicyArn=policy_arn)
@@ -311,7 +510,14 @@ def initialiseIAM():
                     )
         except Exception as e:
             log_error(e, shutdown=True, initialisation=True)
-        
+
+def initialiseIAMRoles():
+    aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
+    iam = boto3.client("iam")
+    policies = [lp_iam_policy, mp_iam_policy, hp_iam_policy]
+    roles = [lp_iam_role, mp_iam_role, hp_iam_role]
+
+    for policy, role in zip(policies, roles):      
         try:
             try:
                 iam.get_role(RoleName=role)
@@ -499,107 +705,68 @@ def hp_lambda_function(event, context):
             "body" : "Slack upload failed"
         }
 
-def log_error(reason="", shutdown=False, initialisation=False):
-    global error_reason
-    if reason: 
-        reason = "Error: " + str(reason)
-    if not reason:
-        reason = "Error initializing resources"
-        
-    error_reason = reason
-    logging.error(reason)
+# Define the functions to delete the resources
+def delete_lambda(lambdas):
+    lambda_client = boto3.client("lambda")
+    print("Lambdas: ", lambdas)
+    for lambda_name in lambdas:
+        try:
+            lambda_client.delete_function(FunctionName=lambda_name)
+        except lambda_client.exceptions.ResourceNotFoundException:
+            pass
 
-    if initialisation:
-        global initialisation_error
-        initialisation_error = True
+def detach_all_policies(role):
+    iam = boto3.client("iam")
+    response = iam.list_attached_role_policies(RoleName=role)
+    policies = response["AttachedPolicies"]
+    for policy in policies:
+        try:
+            iam.detach_role_policy(RoleName=role, PolicyArn=policy["PolicyArn"])
+        except iam.exceptions.NoSuchEntityException:
+            pass
 
-    if shutdown:
-        global exiting
-        exiting = True
+def delete_all_iam_roles():
+    iam = boto3.client("iam")
+    roles = [lp_iam_role, mp_iam_role, hp_iam_role]
+    for role in roles:
+        try:
+            detach_all_policies(role)
+            iam.delete_role(RoleName=role)
+        except iam.exceptions.NoSuchEntityException:
+            pass
 
-    # variables = get_variables()
-    # logging.info(variables)
-    
-def get_variables():
-    output = ""
-    output += "Boto3 session:\n"
-    output += f"Region: {boto3.session.Session().region_name}\n"
-    output += f"Access key: {boto3.Session().get_credentials().access_key}\n"
-    output += f"Secret key: {boto3.Session().get_credentials().secret_key}\n"
-    output += "\nGlobal variables:\n"
-    output += f"prefix: {prefix}\n"
-    output += f"sqs_dlq: {sqs_dlq}\n"
-    output += f"sqs_lp: {sqs_lp}\n"
-    output += f"sqs_mp: {sqs_mp}\n"
-    output += f"sqs_hp: {sqs_hp}\n"
-    output += f"lp_lambda: {lp_lambda}\n"
-    output += f"mp_lambda: {mp_lambda}\n"
-    output += f"hp_lambda: {hp_lambda}\n"
-    output += f"s3_bucket: {s3_bucket}\n"
-    output += f"lp_iam_policy: {lp_iam_policy}\n"
-    output += f"lp_iam_role: {lp_iam_role}\n"
-    output += f"mp_iam_policy: {mp_iam_policy}\n"
-    output += f"mp_iam_role: {mp_iam_role}\n"
-    output += f"hp_iam_policy: {hp_iam_policy}\n"
-    output += f"hp_iam_role: {hp_iam_role}\n"
-    output += f"trello_api_key: {trello_api_key}\n"
-    output += f"trello_api_token: {trello_api_token}\n"
-    output += f"trello_board_ID: {trello_board_ID}\n"
-    output += f"trello_list_name: {trello_list_name}\n"
-    output += f"slack_url: {slack_url}\n"
-    return output
+def delete_all_iam_policies():
+    iam = boto3.client("iam")
+    policies = [lp_iam_policy, lp_iam_policy + "-s3", mp_iam_policy, hp_iam_policy]
+    for policy in policies:
+        try:
+            aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
+            iam.delete_policy(PolicyArn=f'arn:aws:iam::{aws_account_id}:policy/{policy}')
+        except iam.exceptions.NoSuchEntityException:
+            pass    
 
-@app.route("/health", methods=["GET"])
-def health():
-    return Response("Healthy", status=200)
+def delete_s3_bucket():
+    s3 = boto3.client("s3")
+    try:
+        objects = s3.list_objects(Bucket=s3_bucket)
+        if "Contents" in objects:
+            for obj in objects["Contents"]:
+                s3.delete_object(Bucket=s3_bucket, Key=obj["Key"])
+        s3.delete_bucket(Bucket=s3_bucket)
+        print("Deleted S3 bucket")
+    except s3.exceptions.NoSuchBucket:
+        pass
 
-@app.route("/initialise", methods=["POST"])
-def initialise():
-    global initialised, initialisation_error
-    if initialised:
-        return Response("Already initialised", status=200)
-    initialisation_error = False
-    print("Initialising resources")
+def delete_all_queues():
+    sqs = boto3.client("sqs")
+    queues = [sqs_dlq, sqs_lp, sqs_mp, sqs_hp]
+    for queue in queues:
+        try:
+            sqs.delete_queue(QueueUrl=sqs.get_queue_url(QueueName=queue)["QueueUrl"])
+            print("Deleted queue: ", queue)
+        except sqs.exceptions.QueueDoesNotExist:
+            pass
 
-    initialiseLogging()
-
-    initialiseBoto3()
-    if initialisation_error:
-        return Response(error_reason, status=500)
-    get_secrets()
-    if initialisation_error:
-        return Response(error_reason, status=500)
-    create_global_variables()
-    if initialisation_error:
-        return Response(error_reason, status=500)
-    trello_list_id = get_trello_list()
-    
-    if initialisation_error:
-        return Response(error_reason, status=500)
-    initializeSQS()
-    if initialisation_error:
-        return Response(error_reason, status=500)
-    initialiseS3()
-    if initialisation_error:
-        return Response(error_reason, status=500)
-    initialiseIAM()
-    if initialisation_error:
-        return Response(error_reason, status=500)
-    initialiseLambda(trello_list_id)
-    if initialisation_error:
-        return Response(error_reason, status=500)
-
-    print("Initialisation complete")
-    initialised = True
-    return Response("Initialised", status=200)
-
-@app.after_request
-def exit(response):
-    global exiting
-    if exiting:
-        logging.error("Exiting")
-        os._exit(1)
-    return response
 
 if __name__ == "__main__":
     app.run()

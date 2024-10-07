@@ -196,7 +196,8 @@ pip install -r requirements.txt
   "TRELLO_LIST_NAME":"<trello_list_name>",
   "SLACK_URL":"<slack_app_name>"
 }
-```
+``` 
+
 4. Click the `Next` button
 5. Enter a secret name and click `Next`
 6. Click `Next` again then click `Store`
@@ -239,6 +240,9 @@ pip install -r requirements.txt
   - `NGROK_DOMAIN`
   - `NGROK_TOKEN`
 2. Run `docker compose up -d`
+
+### Note
+If changes are made to the `AWS_REGION` value and the `PREFIX` value has not been changed, the system will attempt to create a new bucket in the new region, but will revert back to the original region for the bucket if the name is unavailable.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -292,14 +296,12 @@ Description: `<description>`
     - [x] Medium priority to a trello board
     - [x] High priority to a slack channel
 - [x] Create a `Dockerfile` and `docker-compose.yaml` for easy deployment of the system
-- [ ] Monitor changes to the environment variables so that infrastructure can be managed between sessions
+- [x] Monitor changes to the environment variables so that infrastructure can be managed between sessions
 - [ ] Create a lambda for the DLQ to notify an admin when a ticket is received
 
 <!-- See the [open issues](https://github.com/Jordan527/TSI-Ticketing-System/issues) for a full list of proposed features (and known issues). -->
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
 
 <!-- CONTRIBUTING -->
 ## Contributing
