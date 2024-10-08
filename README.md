@@ -80,7 +80,7 @@
       <ul>
         <li><a href="#local">Local</a></li>
         <li><a href="#docker-compose">Docker Compose</a></li>
-        <li><a href="#minikube">Minikube</a></li>
+        <li><a href="#kubernetes">Kubernetes</a></li>
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
