@@ -352,7 +352,7 @@ Description: <description>
     - [x] High priority to a slack channel
 - [x] Create a `Dockerfile` and `docker-compose.yaml` for easy deployment of the system
 - [x] Monitor changes to the environment variables so that infrastructure can be managed between sessions
-- [ ] Change the S3 bucket ticket names to be more easily readable
+- [x] Change the S3 bucket ticket names to be more easily readable
 - [ ] Alter the `start.sh` file so that the flask app failing won't cause an infinite loop
 - [ ] Replace the use of environment variables to make secrets more secure
 - [ ] Host the system in a cloud service, rather than running locally

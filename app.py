@@ -599,22 +599,28 @@ def initialiseLambda(trello_list_id):
                                 MemorySize=128,
                                 Publish=True
                             )
-                            lambda_client.create_event_source_mapping(
-                                EventSourceArn=f'arn:aws:sqs:{aws_region}:{aws_account_id}:{queue}',
-                                FunctionName=lambda_name,
-                                Enabled=True,
-                                BatchSize=10
-                            )
-                            role_assumed = True
+                        role_assumed = True
                         break
                     except Exception as e:
                         if "The role defined for the function cannot be assumed by Lambda" not in str(e):
-                            break
-                        print("Waiting for IAM role to be ready")
+                            return log_error(e, shutdown=True, initialisation=True)
+                        logging.info("Waiting for IAM role to be ready")
                         time.sleep(2)
 
                 if not role_assumed:
                     return log_error("IAM role not ready", shutdown=True, initialisation=True)
+                
+                try:
+                    lambda_client.create_event_source_mapping(
+                        EventSourceArn=f'arn:aws:sqs:{aws_region}:{aws_account_id}:{queue}',
+                        FunctionName=lambda_name,
+                        Enabled=True,
+                        BatchSize=10
+                    )
+                except Exception as e:
+                    if "ResourceConflictException" not in str(e):
+                        return log_error(e, shutdown=True, initialisation=True)
+                    logging.info(e)
 
                 os.remove("./lambda_function.zip")
                 os.remove(f"./{function_name}.py")
@@ -633,9 +639,9 @@ def lp_lambda_function(event, context):
         s3Client = boto3.client("s3", region_name="<region_name>")
         bucket_name = "<bucket_name>"
 
-        title = sqs_msg.get("Title", "Untitled").replace(" ", "_")
-        timestamp = time.strftime("%Y%m%d-%H%M%S")
-        unique_filename = f"{timestamp}_{title}_Ticket.json"
+        title = sqs_msg.get("Title", "Untitled")
+        timestamp = time.strftime("%Y-%m-%d %H-%M-%S")
+        unique_filename = f"{timestamp} - {title}.json"
 
         response = s3Client.put_object(Bucket=bucket_name, Key=unique_filename, Body=json.dumps(sqs_msg))
 
