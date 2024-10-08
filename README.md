@@ -146,20 +146,32 @@ git clone https://github.com/Jordan527/TSI-Ticketing-System.git
 
 ### Create a new team in MS Teams
 1. Click the `+` button on the Teams tab of MS Teams and select `Create team`.
-2. Select `From scratch` > `Public`, then give your new team a name and description, and click `Create`.
-3. Create a new channel in the team by clicking the ellipsis button next to the team name, then `Add channel`.
-4. Give the channel a name and select `Standard access`.
+
+![alt text](./Images/createTeam.png)
+
+2. Fill the `Team name` and `Name the first channel` field before clicking the `Create` button
+
+![alt text](./Images/teamDetails.png)
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ### Create an outgoing webhook in MS Teams
 1. Click the `...` on the team name and select `Manage team`
-2. Navigate to the `Apps`
-3. Click the `Create an outgoing webhook` button above the list of apps
-4. Add a name to the webhook (this will be used for calling the bot)
-5. Add your Ngrok URL as the calback url, which should match the following format: `your-domain-name.ngrok-free.app`
-6. Add a description
+
+![alt text](./Images/manageTeam.png)
+
+2. Navigate to the `Apps` and click the `Create an outgoing webhook` button above the list of apps
+
+![alt text](./Images/createWebhook.png)
+
+3. Fill out the form
+    - Add a name to the webhook (this will be used for calling the bot)
+    - Add your Ngrok URL as the calback url, which should match the following format: `your-domain-name.ngrok-free.app`
+    - Add a description
+
+![alt text](./Images/webhookDetails.png)
+
 7. Click the `Create` button
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -302,7 +314,7 @@ If changes are made to the `AWS_REGION` value and the `PREFIX` value has not bee
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Usage
-1. Fill out the form in the MS Teams Channel using the following format, which is case insensitive:
+-  Fill out the a ticket in the MS Teams Channel using the following format, which is case insensitive:
 
 ```
 @<webhook title>
@@ -311,32 +323,19 @@ Priority: <priority (low, medium or high)>
 Description: <description>
 ```
 
-</br>
-
 ![Teams Ticket](./Images/teamsTicket.png)
 
-2. Check the sqs are of your aws console for if a message has come through
-<br />
+- Open your S3 bucket to find low priority logs
 
-![AWS Queue List ](./Images/awsQueueList.png)
+![alt text](./Images/s3Ticket.png)
 
-3. Click on a queue
-4. Click `Send and Receive Messages` on the top
-<br />
+- Open your trello board for medium priority tickets
 
-![Send and Receive Messages ](./Images/sendAndReceive.png)
+![alt text](./Images/trelloTicket.png)
 
-5. Click `Poll for Messages` in `Receiving Messages`
-<br />
+- Open your slack channel for high priority tickets
 
-![Poll Messages ](./Images/pollMessages.png)
-
-6. You should see a list of messages
-<br />
-
-![SQS Messages ](./Images/sqsMessages.png)
-7. Click on a message to see its contents
-
+![alt text](./Images/slackTicket.png)
 
 <!-- ROADMAP -->
 ## Roadmap
