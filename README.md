@@ -78,8 +78,9 @@
     <li>
       <a href="#deployment">Deployment</a>
       <ul>
-        <li><a href="#with-docker-compose">With Docker Compose</a></li>
-        <li><a href="#without-docker-compose">Without Docker Compose</a></li>
+        <li><a href="#local">Local</a></li>
+        <li><a href="#docker-compose">Docker Compose</a></li>
+        <li><a href="#minikube">Minikube</a></li>
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
@@ -111,7 +112,8 @@ The TSI Ticketing System is a comprehensive bug ticketing system designed to str
 
 * [![Flask][Flask.com]][Flask-url]
 * [![Ngrok][Ngrok.com]][Ngrok-url]
-* [![Compose][Compose.com]][Compose-url]
+* [![Docker][Docker.com]][Docker-url]
+* [![Kubernetes][Kubernetes.com]][Kubernetes-url]
 * [![AWS][AWS.com]][AWS-url]
 * [![Teams][Teams.com]][Teams-url]
 
@@ -124,9 +126,12 @@ The TSI Ticketing System is a comprehensive bug ticketing system designed to str
 To get run your own version of the TSI Ticketing System, follow the instructions below.
 
 ### Prerequisites
-* Python ^3.12
-* Docker Compose
 * AWS Account
+* Ngrok Account
+* Pyhton v3.12.7 (optional depending on deployment strategy)
+* Docker & Docker Compose (optional depending on deployment strategy)
+* Kubectl (optional depending on deployment strategy)
+
 
 ### Installation
 1. `git clone` the repository.
@@ -286,21 +291,7 @@ git clone https://github.com/Jordan527/TSI-Ticketing-System.git
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Deployment
-### With Docker Compose
-1. Customise the following environment variables in `docker-compose.yaml`
-  - `AWS_REGION`
-  - `AWS_ACCESS_KEY_ID`
-  - `AWS_SECRET_ACCESS_KEY`
-  - `NGROK_DOMAIN`
-  - `NGROK_TOKEN`
-2. Run `docker compose up -d`
-
-#### Note
-If changes are made to the `AWS_REGION` value and the `PREFIX` value has not been changed, the system will attempt to create a new bucket in the new region, but will revert back to the original region for the bucket if the name is unavailable.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-### Without Docker Compose
+### Local
 - Create environment variables for the following:
   - `AWS_REGION`
   - `AWS_ACCESS_KEY_ID`
@@ -310,6 +301,34 @@ If changes are made to the `AWS_REGION` value and the `PREFIX` value has not bee
   
 - Run `pip install -r requirements.txt`
 - Run the `start.sh` file
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+### Docker Compose
+1. Customise the following environment variables in `docker-compose.yaml`
+    - `AWS_REGION`
+    - `AWS_ACCESS_KEY_ID`
+    - `AWS_SECRET_ACCESS_KEY`
+    - `NGROK_DOMAIN`
+    - `NGROK_TOKEN`
+2. Run `docker compose up -d`
+
+#### Note
+If changes are made to the `AWS_REGION` value and the `PREFIX` value has not been changed, the system will attempt to create a new bucket in the new region, but will revert back to the original region for the bucket if the name is unavailable.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+### Kubernetes
+1. Customise the following variabels in `k8s_start.sh`
+    - `aws_region`
+    - `aws_access_key_id`
+    - `aws_secret_access_key`
+    - `ngrok_domain`
+    - `ngrok_token`
+2. Run the `k8s_start.sh` file
+
+#### Note
+This method currently only allows for one pod
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -353,7 +372,7 @@ Description: <description>
 - [x] Monitor changes to the environment variables so that infrastructure can be managed between sessions
 - [x] Change the S3 bucket ticket names to be more easily readable
 - [x] Alter the `start.sh` file so that the flask app failing won't cause an infinite loop
-- [ ] Replace the use of environment variables to make secrets more secure
+- [x] Replace the use of environment variables to make secrets more secure
 - [ ] Host the system in a cloud service, rather than running locally
 - [ ] Create a lambda for the DLQ to notify an admin when a ticket is received
 
@@ -410,13 +429,22 @@ Distributed under the MIT License. See `LICENSE.md` for more information.
 [license-shield]: https://img.shields.io/github/license/Jordan527/TSI-Ticketing-System.svg?style=for-the-badge
 [license-url]: https://github.com/Jordan527/TSI-Ticketing-System/blob/master/LICENSE.md
 
+
+
 [Flask.com]: https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white
 [Flask-url]: https://flask.palletsprojects.com/en/3.0.x/
+
 [Ngrok.com]: https://img.shields.io/badge/ngrok%20-%20%2302238f?style=for-the-badge
 [Ngrok-url]: https://ngrok.com/
-[Compose.com]: https://img.shields.io/badge/Docker%20Compose%20-%20%231d63ed?style=for-the-badge&logo=docker&logoColor=white
-[Compose-url]: https://docs.docker.com/compose/
+
+[Docker.com]: https://img.shields.io/badge/Docker%20-%20%231d63ed?style=for-the-badge&logo=docker&logoColor=white
+[Docker-url]: https://docker.com
+
+[Kubernetes.com]: https://img.shields.io/badge/kubernetes%20-%20%23326ce5?style=for-the-badge&logo=kubernetes&logoColor=white
+[Kubernetes-url]: https://kubernetes.io/
+
 [AWS.com]: https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white
 [AWS-url]: https://aws.amazon.com
+
 [Teams.com]: https://img.shields.io/badge/MS%20Teams-white?style=for-the-badge&logo=microsoft%20teams
 [Teams-url]: https://www.microsoft.com/en-gb/microsoft-teams/group-chat-software
