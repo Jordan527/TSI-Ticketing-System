@@ -110,12 +110,12 @@ def initialise():
     if initialisation_error:
         return Response(error_reason, status=500)
 
-    if state:
+    if state: # If state exists
         if differences:
             if "prefix" in differences or "aws_region" in differences:
-                create_global_variables(state["prefix"])
+                create_global_variables(state["prefix"]) # Use the old prefix
                 if "aws_region" in differences:
-                    initialiseBoto3(state["aws_region"])
+                    initialiseBoto3(state["aws_region"]) # Use the old region
 
                 try:
                     delete_lambda([lp_lambda, mp_lambda, hp_lambda])
@@ -162,9 +162,9 @@ def initialise():
     
     initialiseS3()
     if initialisation_error:
-        if "conflicting conditional operation" in error_reason:
+        if "conflicting conditional operation" in error_reason: # Bucket already exists
             reset_error()
-            initialiseBoto3(state["aws_region"])
+            initialiseBoto3(state["aws_region"]) # Use the old region
             initialiseS3()
             if initialisation_error:
                 return Response(error_reason, status=500)
@@ -585,6 +585,7 @@ def initialiseLambda(trello_list_id):
                 with zipfile.ZipFile("./lambda_function.zip", "w") as z:
                     z.write(f"./{function_name}.py", arcname="lambda_function.py")
 
+                role_assumed = False
                 for _ in range(10):
                     try:
                         with open("./lambda_function.zip", "rb") as f:
@@ -604,12 +605,16 @@ def initialiseLambda(trello_list_id):
                                 Enabled=True,
                                 BatchSize=10
                             )
+                            role_assumed = True
                         break
                     except Exception as e:
                         if "The role defined for the function cannot be assumed by Lambda" not in str(e):
                             break
                         print("Waiting for IAM role to be ready")
                         time.sleep(2)
+
+                if not role_assumed:
+                    return log_error("IAM role not ready", shutdown=True, initialisation=True)
 
                 os.remove("./lambda_function.zip")
                 os.remove(f"./{function_name}.py")

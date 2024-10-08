@@ -134,12 +134,6 @@ To get run your own version of the TSI Ticketing System, follow the instructions
 git clone https://github.com/Jordan527/TSI-Ticketing-System.git
 ```
 
-2. Python `pip` install the python libraries.
-
-```sh
-pip install -r requirements.txt
-```
-
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ### Create an Ngrok account
@@ -174,25 +168,42 @@ pip install -r requirements.txt
 ### IAM User
 1. Open the AWS Management Console and navigate to `IAM`.
 2. Select `Users` on the left panel then click `Create user`.
-3. Enter a name like `Ticket Bot` and click `Next`.
+3. Enter a name like `ticket.bot` and click `Next`.
+
+![alt text](./Images/userDetails.png)
+
 4. Under permissions keep the `Add user to group` option selected.
 5. Under `User groups` create a new user group.
-   1. Add a name for the user group like `Ticket Admin`.
-   2. Search and select the permission policy called `AmazonSQSFullAccess`.
-   3. Select `Create user group` to create the group.
+![alt text](./Images/userGroup.png)
+   1. Add a name for the user group like `ticket-admin`.
+   2. Search and select the permission policy called `SecretsManagerReadWrite`.
+   3. Search and select the permission policy called `AmazonSQSFullAccess`.
+   4. Search and select the permission policy called `IAMFullAccess`.
+   5. Search and select the permission policy called `AmazonS3FullAccess`.
+   6. Search and select the permission policy called `AWSLambda_FullAccess`.
+   7. Select `Create user group` to create the group.
 6. Select your newly created user group and click `Next`.
+
+![alt text](./Images/userSelectGroup.png)
+
 7. Click `Create user` to create the IAM user.
-8. Under the `Security credentials` tab and `Access keys` section, click `Create access key`.
+8. In the user, under the `Security credentials` tab and `Access keys` section, click `Create access key`.
+![alt text](./Images/userCreateAccessKey.png)
    1. Select `Command Line Interface (CLI)`, tick the confirmation box and click `Next`.
    2. Click `Create access key`.
-   3. Save both the public and private access keys somewhere safe, not in plain text.
+   ![alt text](./Images/userKeyCase.png)
+   3. Save both the public and private access keys somewhere safe, not in plain text, and click `Done`.
+   ![alt text](./Images/userAccessCredentials.png)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ### AWS Secret Manager
 1. In the same AWS region as you would like to use for the rest of servcices, create an AWS secret
 2. Select `Other type of secret`
-3. Enter the following as plaintext, changing the values for your own
+
+![alt text](./Images/secretType.png)
+
+3. Enter the following as the `Plaintext` value for the `Key/value` fiekd, changing the values for your own
 ```
 {
   "PREFIX":"<prefix_name>",
@@ -203,6 +214,12 @@ pip install -r requirements.txt
   "SLACK_URL":"<slack_app_name>"
 }
 ``` 
+
+![alt text](./Images/secretPlaintext.png)
+
+4. Switch the type back to `Key/value` to verify the `Plaintext` syntax
+
+![alt text](./Images/secretKeyValue.png)
 
 4. Click the `Next` button
 5. Enter a secret name and click `Next`
@@ -230,11 +247,29 @@ pip install -r requirements.txt
 
 ## Slack App Configuration
 1. Navigate to https://api.slack.com/apps 
-2. Click the `Create New App` button and select the `From scratch` option
-3. Enter a name and workspace before clicking the `Create App` button
-4. Navigate to the `Incoming Webhooks` tab under `Features` and active incoming webhooks
-5. Click the `Add New Webhook to Workspace` button and select a channel
-6. Make a note of the webhook URL
+2. Click the `Create New App` button
+
+![alt text](./Images/slackApps.png)
+
+3. Select the `From scratch` option
+
+![alt text](./Images/slackFromScratch.png)
+
+4. Enter a name and workspace before clicking the `Create App` button
+
+![alt text](./Images/slackCreateApp.png)
+
+5. In your app, navigate to the `Incoming Webhooks` tab under `Features` and active incoming webhooks
+
+![alt text](./Images/slackActivateWebhooks.png)
+
+6. Click the `Add New Webhook to Workspace` button and select a channel
+
+![alt text](./Images/slackAppPermissions.png)
+
+7. Make a note of the webhook URL
+
+![alt text](./Images/slackWebhook.png)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -317,6 +352,10 @@ Description: <description>
     - [x] High priority to a slack channel
 - [x] Create a `Dockerfile` and `docker-compose.yaml` for easy deployment of the system
 - [x] Monitor changes to the environment variables so that infrastructure can be managed between sessions
+- [ ] Change the S3 bucket ticket names to be more easily readable
+- [ ] Alter the `start.sh` file so that the flask app failing won't cause an infinite loop
+- [ ] Replace the use of environment variables to make secrets more secure
+- [ ] Host the system in a cloud service, rather than running locally
 - [ ] Create a lambda for the DLQ to notify an admin when a ticket is received
 
 <!-- See the [open issues](https://github.com/Jordan527/TSI-Ticketing-System/issues) for a full list of proposed features (and known issues). -->
