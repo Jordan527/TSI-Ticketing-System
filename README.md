@@ -254,22 +254,29 @@ If changes are made to the `AWS_REGION` value and the `PREFIX` value has not bee
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ### Without Docker Compose
-- Run the ngrok domain using the command `ngrok http --domain=your-domain-name.ngrok-free.app 5000` (make sure it is running on port **5000**) in a terminal.
-- In a separate terminal, run the Python flask app using the command `flask run` in the **same folder** that your flask app is located.
+- Create environment variables for the following:
+  - `AWS_REGION`
+  - `AWS_ACCESS_KEY_ID`
+  - `AWS_SECRET_ACCESS_KEY`
+  - `NGROK_DOMAIN`
+  - `NGROK_TOKEN`
+  
+- Run `pip install -r requirements.txt`
+- Run the `start.sh` file
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Usage
 1. Fill out the form in the MS Teams Channel using the following format, which is case insensitive:
 
-@`<webhook title>`
-<br />
-Title: `<title>`
-<br />
-Priority: `<priority (low, medium or high)>`
-<br />
-Description: `<description>`
-<br />
+```
+@<webhook title>
+Title: <title>
+Priority: <priority (low, medium or high)>
+Description: <description>
+```
+
+</br>
 
 ![Teams Ticket](./Images/teamsTicket.png)
 
