@@ -1,6 +1,7 @@
 services:
   ticketing:
     container_name: tsi-ticketing
+    restart: unless-stopped
     build:
       context: .
       dockerfile: Dockerfile
