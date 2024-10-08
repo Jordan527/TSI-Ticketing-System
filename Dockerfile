@@ -31,7 +31,7 @@ RUN mv ngrok /usr/local/bin
 RUN chmod +x start.sh
 
 # Add HEALTHCHECK
-HEALTHCHECK --interval=15s --timeout=10s --start-period=30s --retries=3 CMD curl -f http://localhost:5000/health || exit 1
+HEALTHCHECK --interval=15s --timeout=10s --start-period=30s --retries=3 CMD curl -f http://localhost:5000/health | grep -q "Healthy" || bash -c 'kill -s 15 -1 && (sleep 10; kill -s 9 -1)'
 
 # Run start.sh
 CMD ["./start.sh"]
