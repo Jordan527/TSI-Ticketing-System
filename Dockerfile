@@ -4,14 +4,11 @@ FROM python:3.12.7-slim
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy the requirements file into the container
-COPY requirements.txt .
+# Copy the contents of the flask directory into the container
+COPY flask/ .
 
 # Install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy the rest of the application code into the container
-COPY . .
 
 # Expose the port the app runs on
 EXPOSE 5000
@@ -26,6 +23,9 @@ RUN apt-get update && apt-get install -y tar
 RUN curl https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz -o ngrok-stable-linux-amd64.tgz
 RUN tar -xvf ngrok-stable-linux-amd64.tgz
 RUN mv ngrok /usr/local/bin
+
+# Remove Windows line endings
+RUN sed -i -e 's/\r$//' start.sh
 
 # Ensure start.sh is executable
 RUN chmod +x start.sh
