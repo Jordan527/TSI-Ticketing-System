@@ -128,7 +128,7 @@ To get run your own version of the TSI Ticketing System, follow the instructions
 ### Prerequisites
 * AWS Account
 * Ngrok Account
-* Pyhton v3.12.7 (optional depending on deployment strategy)
+* Python v3.12.7 (optional depending on deployment strategy)
 * Docker & Docker Compose (optional depending on deployment strategy)
 * Kubectl (optional depending on deployment strategy)
 
