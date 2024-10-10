@@ -4,7 +4,7 @@ metadata:
   name: flask-app
   namespace: ticketing
 spec:
-  replicas: 1
+  replicas: 4
   selector:
     matchLabels:
       app: flask-app
@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: flask
-          image: jalijeff/tsi-ticketing:latest
+          image: jalijeff/kube-tsi-ticketing:latest
           ports:
             - containerPort: 5000
           env:
@@ -34,27 +34,3 @@ spec:
                 secretKeyRef:
                   name: aws-secret-access-key
                   key: data
-            - name: NGROK_DOMAIN
-              valueFrom:
-                secretKeyRef:
-                  name: ngrok-domain
-                  key: data
-            - name: NGROK_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: ngrok-token
-                  key: data
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: flask-app-service
-#   namespace: ticketing
-# spec:
-#   selector:
-#     app: flask-app
-#   ports:
-#     - protocol: TCP
-#       port: 80
-#       targetPort: 5000
-#   type: LoadBalancer

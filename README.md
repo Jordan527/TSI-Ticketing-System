@@ -319,16 +319,16 @@ If changes are made to the `AWS_REGION` value and the `PREFIX` value has not bee
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ### Kubernetes
-1. Customise the following variabels in `k8s_start.sh`
+1. Navigate to https://dashboard.ngrok.com/api-keys and generate an API key
+2. Customise the following variabels in `k8s_start.sh`
     - `aws_region`
     - `aws_access_key_id`
     - `aws_secret_access_key`
     - `ngrok_domain`
     - `ngrok_token`
-2. Run the `k8s_start.sh` file
-
-#### Note
-This method currently only allows for one pod
+    - `ngrok_api_key`
+3. Configure kubectl to connect to your cluster
+4. Run the `k8s_start.sh` file
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
