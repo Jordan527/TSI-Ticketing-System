@@ -1,4 +1,7 @@
 .venv/
+__pycache__
+flask/__pycache__
 docker-compose.private.yaml
+docker-compose.cdk-private.yaml
 k8s_start_private.sh
 data

@@ -1,0 +1,20 @@
+services:
+  ticketing:
+    container_name: tsi-ticketing
+    image: jalijeff/tsi-ticketing-cdk:latest
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - AWS_REGION=<YOUR_AWS_REGION>
+      - AWS_ACCESS_KEY_ID=<YOUR_AWS_ACCESS_KEY_ID>
+      - AWS_SECRET_ACCESS_KEY=<YOUR_AWS_SECRET>
+      - NGROK_DOMAIN=<YOUR_NGROK_DOMAIN>
+      - NGROK_TOKEN=<YOUR_NGROK_TOKEN>
+      - SQS_LP=<YOUR_SQS_LP_NAME>
+      - SQS_MP=<YOUR_SQS_MP_NAME>
+      - SQS_HP=<YOUR_SQS_HP_NAME>
+    volumes:
+      - data:/app/data
+volumes:
+  data:
